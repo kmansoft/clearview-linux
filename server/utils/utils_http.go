@@ -82,6 +82,7 @@ func WriteResponseWithCompression(w http.ResponseWriter, r *http.Request, rsByte
 
 			_, _ = gzipWriter.Write(rsBytes)
 			_ = gzipWriter.Flush()
+			_ = gzipWriter.Close()
 
 			fmt.Printf("Compressed to %d bytes\n", byteWriter.Len())
 
