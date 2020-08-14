@@ -1,0 +1,11 @@
+[Unit]
+Description=Clearview server, https://clearview.rocks
+After=network.target
+Requires=influxdb.service
+Requires=mongod.service
+
+[Service]
+ExecStart=/usr/sbin/clearview-server
+
+[Install]
+WantedBy=multi-user.target

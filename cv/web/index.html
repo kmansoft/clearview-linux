@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+            integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+            crossorigin="anonymous"></script>    <!-- Google fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+          rel="stylesheet">
+    <title>Clearview Index</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!--
+    <a class="navbar-brand" href="#">Navbar</a>
+    -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="d-flex flex-column w-100">
+        <div class="d-sm-flex d-block flex-nowrap">
+            <div class="collapse navbar-collapse">
+                <ul id="navbar-section-list" class="navbar-nav mr-auto">
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown-item-right">
+                        <a id="refresh-button" class="nav-link" href="#"><img src="icon-refresh-24px.svg"></a>
+                    </li>
+                    <li class="nav-item dropdown dropdown-item-right">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarPeriodMenuLink" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img src="icon-av_timer-24px.svg"></a>
+                        <div id="navbarPeriodItemList"
+                             class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarPeriodMenuLink">
+                            <a class="dropdown-item"
+                               data-minutes="30">30 minutes</a>
+                            <a class="dropdown-item"
+                               data-minutes="60">1 hour</a>
+                            <a class="dropdown-item"
+                               data-minutes="2h">2 hours</a>
+                            <a class="dropdown-item"
+                               data-minutes="6h">6 hours</a>
+                            <a class="dropdown-item"
+                               data-minutes="12h">12 hours</a>
+                            <a class="dropdown-item"
+                               data-minutes="1d">24 hours</a>
+                            <a class="dropdown-item"
+                               data-minutes="4d">4 days</a>
+                            <a class="dropdown-item"
+                               data-minutes="14d">2 weeks</a>
+                            <a class="dropdown-item"
+                               data-minutes="42d">6 weeks</a>
+                            <a class="dropdown-item"
+                               data-minutes="96d">3 months</a>
+                            <a class="dropdown-item"
+                               data-minutes="192d">6 months</a>
+                            <a class="dropdown-item"
+                               data-minutes="384d">1 year</a>
+                            <a class="dropdown-item"
+                               data-reset="true">Reset to now</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <small id="navbar-node-info"></small>
+    </div>
+</nav>
+
+<div class="container mb-3">
+    <div id="container-root">
+        <!-- This is where we insert SPA content -->
+    </div>
+</div>
+
+<div id="app-settings-modal-root" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-largeish" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="node-item-modal-title" class="modal-title">Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Items to show</h4>
+                <div class="ml-4">
+                    <form>
+                        <div class="form-group">
+                            <input type="checkbox" class="form-check-input" id="app-settings-modal-apache">
+                            <label class="form-check-label" for="app-settings-modal-apache">Apache</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" class="form-check-input" id="app-settings-modal-nginx">
+                            <label class="form-check-label" for="app-settings-modal-nginx">Nginx</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" class="form-check-input" id="app-settings-modal-mysql">
+                            <label class="form-check-label" for="app-settings-modal-mysql">MySQL</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" class="form-check-input" id="app-settings-modal-pgsql">
+                            <label class="form-check-label" for="app-settings-modal-pgsql">PgSQL</label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                <button id="app-settings-modal-save" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.1/tinycolor.min.js"></script>
+
+<link rel="stylesheet" href="time_chart.css"/>
+<script src="time_chart.js"></script>
+<script src="util.js"></script>
+
+</html>
+<script type="text/javascript">
+    'use strict';
+
+    <!-- Single Page Application support - begin -->
+
+    class SpaDispatcher {
+        constructor() {
+            this.http = axios.create({
+                timeout: 15 * 1000
+            });
+
+            this.end_time = 0;
+            this.minutes = 30;
+            this.current = null;
+            this.DEBUG = false;
+
+            const button = document.getElementById('refresh-button');
+            button.onclick = (e) => {
+                e.preventDefault();
+                this.onClickedRefresh();
+            };
+        }
+
+        loadCurrentPage(navBar) {
+            const hash = decodeURI(window.location.hash);
+            if (!hash) {
+                return false
+            }
+
+            const params = new URLSearchParams("?" + hash.substr(1));
+            const slug = params.get("slug");
+            const nodeId = params.get("node");
+            if (!slug || !nodeId) {
+                return false
+            }
+
+            const link = navBar.getLinkBySlug(slug);
+            if (!link) {
+                return false
+            }
+
+            NODE_ID = nodeId;
+
+            console.log("nav bar load current page", link);
+
+            const href = "./" + link;
+            this.loadPage(href);
+
+            navBar.setIsActive(link);
+            navBar.setLimit(link === "charts-nodes.html" ? 1 : -1);
+
+            return true;
+        }
+
+        loadPage(href) {
+            console.log("Load page", href);
+
+            if (window.__component__ && window.__component__[href] && !this.DEBUG) {
+                this.loadPageDone(href, null);
+                return;
+            }
+
+            this.http.get(href)
+                .then((response) => {
+                    if (response.data) {
+                        this.loadPageDone(href, response.data);
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        }
+
+        loadPageDone(href, data) {
+            console.log("loadPageDone", href);
+
+            const root = document.getElementById("container-root");
+
+            if (root.__component__) {
+                root.__component__.code.$isMounted = false;
+                root.__component__.code.onUnmounted();
+                root.__component__ = null
+            }
+
+            if (!window.__component__) {
+                window.__component__ = {}
+            }
+
+            let component = window.__component__[href];
+            if (component == null) {
+                component = {};
+                window.__component__[href] = component;
+
+                const matchStart = new RegExp("<" + "script[^>]+>").exec(data);
+                const matchEnd = new RegExp("</" + "script>").exec(data);
+
+                const scriptText = data.substring(matchStart.index + matchStart[0].length, matchEnd.index);
+                const remainText = data.substring(0, matchStart.index) + "\n" +
+                    data.substring(matchEnd.index + matchEnd[0].length);
+
+                const parsedNode = new DOMParser().parseFromString(remainText, 'text/html');
+
+                console.log("Parsed html for", href, "is", parsedNode);
+
+                // Nodes
+                component.nodes = [...parsedNode.body.children];
+
+                // Code
+                const scriptNode = document.createElement("script");
+                const scriptRoot = document.documentElement;
+                scriptNode.text = `
+'use strict';
+window.__component__["${href}"].code = function() {
+    ${scriptText}
+    return COMPONENT;
+}()`;
+
+                scriptRoot.appendChild(scriptNode);
+                scriptRoot.removeChild(scriptNode);
+
+                const filler = {
+                    onCreated() {
+                        console.log("Filler onCreated")
+                    },
+                    onMounted(importNode, refs, minutes) {
+                        console.log("Filler onMounted", minutes)
+                    },
+                    onRefresh(minutes) {
+                        console.log("Filler onRefresh")
+                    },
+                    onTimePeriod(minutes) {
+                        console.log("Filler onTimePeriod", duration)
+                    },
+                    onUnmounted() {
+                        console.log("Filler onUnmounted")
+                    }
+                };
+
+                component.code = Object.assign(filler, component.code);
+                component.code.onCreated();
+            }
+
+            const componentNodes = component.nodes;
+
+            let importNode;
+
+            if (componentNodes.length === 1) {
+                importNode = document.importNode(componentNodes[0], true);
+            } else {
+                importNode = document.createElement("div", true);
+                for (let item of componentNodes) {
+                    importNode.appendChild(document.importNode(item, true));
+                }
+            }
+
+            importNode.classList.add("my-3");
+            importNode.classList.add("import-node");
+
+            root.innerHTML = "";
+            root.appendChild(importNode);
+
+            const refs = {};
+            for (let node of importNode.querySelectorAll("[id]")) {
+                refs[node.id] = node;
+            }
+
+            component.code.$isMounted = true;
+            component.code.onMounted(this, importNode, refs, this.end_time, this.minutes);
+
+            root.__component__ = component;
+
+            this.initTimePeriodDropDown();
+        }
+
+        initTimePeriodDropDown() {
+            const list = document.querySelectorAll("#navbarPeriodItemList a");
+            for (let node of list) {
+                node.onclick = () => {
+                    const root = document.getElementById("container-root");
+                    if (root.__component__ && root.__component__.code && root.__component__.code.$isMounted) {
+                        if (node.dataset["reset"]) {
+                            // Reset to current time
+                            const end_time = 0;
+                            console.log("onclick for time period reset", node, end_time);
+
+                            this.end_time = end_time;
+                            root.__component__.code.onEndTime(this.end_time);
+                        } else {
+                            // Change how much we show
+                            const minutes = parseDuration(node.dataset["minutes"]);
+                            console.log("onclick for time period item", node, minutes);
+
+                            this.minutes = minutes;
+                            root.__component__.code.onRefresh(this.end_time, this.minutes);
+                        }
+                    }
+                }
+            }
+        }
+
+        onClickedRefresh(e) {
+            const root = document.getElementById("container-root");
+
+            if (root.__component__ && root.__component__.code && root.__component__.code.$isMounted) {
+                root.__component__.code.onRefresh(this.end_time, this.minutes);
+            }
+        }
+
+        onZoomInSelection(timeValues, indexFrom, indexTo) {
+            console.log('onZoomInSelection', timeValues, indexFrom, indexTo);
+
+            const step = timeValues[1] - timeValues[0];
+            let start = timeValues[indexFrom];
+            let end = timeValues[indexTo];
+            console.log('onZoomInSelection', new Date(1000 * start), new Date(1000 * end));
+
+            if (end - start <= 30 * 60) {
+                // We don't zoom in to less than 30 minutes overall
+                return
+            }
+
+            const root = document.getElementById("container-root");
+
+            if (root.__component__ && root.__component__.code && root.__component__.code.$isMounted) {
+                for (let s of TIME_DURATION_LIST) {
+                    const minutes = parseDuration(s);
+                    if (minutes * 60 >= end - start) {
+                        // Duration is in minutes, start and end are unix time in seconds
+                        root.__component__.code.onRefresh(end, minutes);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    <!-- Single Page Application support - end -->
+
+    let NODE_ID = "";
+
+    const elNodeInfo = document.getElementById("navbar-node-info");
+    elNodeInfo.innerText = "";
+
+    const http = axios.create({
+        headers: {
+            common: {
+                Accept: 'application/json'
+            }
+        },
+        timeout: 15 * 1000
+    });
+
+    const settings = [{
+        checkId: "app-settings-modal-apache",
+        storageKey: "ShowApache",
+        navBarId: "nav-bar-apache"
+    }, {
+        checkId: "app-settings-modal-nginx",
+        storageKey: "ShowNginx",
+        navBarId: "nav-bar-nginx"
+    }, {
+        checkId: "app-settings-modal-mysql",
+        storageKey: "ShowMySQL",
+        navBarId: "nav-bar-mysql"
+    }, {
+        checkId: "app-settings-modal-pgsql",
+        storageKey: "ShowPgSQL",
+        navBarId: "nav-bar-pgsql"
+    }];
+
+    const spa = new SpaDispatcher();
+    const nav = new NavBar("navbar-section-list");
+    nav.setOnClick((slug, link) => {
+        console.log("nav bar onclick", link);
+
+        if (slug === "index") {
+            NODE_ID = "";
+            window.location.hash = "";
+        } else {
+            window.location.hash = "#" + encodeURI("slug=" + encodeURIComponent(slug) +
+                "&node=" + encodeURIComponent(NODE_ID));
+        }
+
+        const href = "./" + link;
+        spa.loadPage(href);
+        nav.setIsActive(link);
+        nav.setLimit(slug === "index" ? 1 : -1);
+    });
+    nav.setGetIsVisible((liid) => {
+        for (let item of settings) {
+            if (item.navBarId === liid) {
+                let value = window.localStorage.getItem(item.storageKey);
+                return value == null || value === "true";
+            }
+        }
+        return true
+    });
+
+    window.onpopstate = () => {
+        if (spa.loadCurrentPage(nav)) {
+            loadNodeTitle();
+        } else {
+            elNodeInfo.innerText = "";
+            spa.loadPage("charts-nodes.html");
+            nav.setIsActive("charts-nodes.html");
+            nav.setLimit(1);
+        }
+    };
+
+    function loadNodeTitle() {
+        if (!NODE_ID) {
+            elNodeInfo.innerText = "";
+            return;
+        }
+
+        const req = {
+            node_id: NODE_ID
+        };
+        http.post('/cv/api/v1/getnodetitle', req)
+            .then((response) => {
+                console.log('get response', response);
+
+                if (response.data && response.data.node_title) {
+                    if (NODE_ID === response.data.node_id) {
+                        elNodeInfo.innerText = response.data.node_title;
+                    }
+                }
+            })
+            .catch((error) => {
+                console.log('get request error', error)
+            })
+            .then(() => {
+                console.log('get request is done')
+            })
+    }
+
+    function onClickSettings() {
+        console.log("onClickSettings");
+        if (window.localStorage) {
+            const elRoot = $("#app-settings-modal-root");
+            for (let item of settings) {
+                let value = window.localStorage.getItem(item.storageKey);
+                value = value == null || value === "true";
+                const el = document.getElementById(item.checkId);
+                el.checked = value;
+            }
+
+            const elOK = document.getElementById("app-settings-modal-save");
+            elOK.onclick = () => {
+                elRoot.modal("hide");
+
+                for (let item of settings) {
+                    const el = document.getElementById(item.checkId);
+                    const value = "" + el.checked;
+                    window.localStorage.setItem(item.storageKey, value);
+                }
+
+                nav.render();
+            };
+
+            elRoot.modal();
+        }
+    }
+
+    if (spa.loadCurrentPage(nav)) {
+        loadNodeTitle();
+    } else {
+        elNodeInfo.innerText = "";
+        spa.loadPage("charts-nodes.html");
+        nav.setIsActive("charts-nodes.html");
+        nav.setLimit(1);
+    }
+
+</script>
+

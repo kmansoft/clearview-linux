@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+
+<div>
+
+    <div class="d-flex">
+        <div>
+            <div class="btn-group">
+                <button id="sort-button-name" class="btn btn-secondary">Name</button>
+                <button id="sort-button-io" class="btn btn-light">I/O</button>
+                <button id="sort-button-cpu" class="btn btn-light">CPU</button>
+                <button id="sort-button-memory" class="btn btn-light">Memory</button>
+
+                <div style="position: relative; top: 6px;">
+                    <img id="nav-list-prev" src="icon-chevron_left-24px.svg"
+                         class="prev_next_chevron">
+                    <img id="nav-list-next" src="icon-chevron_right-24px.svg"
+                         class="prev_next_chevron">
+                </div>
+            </div>
+
+            <table class="uk-table uk-table-small muk-data-table muk-tiny-table">
+                <thead>
+                <tr>
+                    <td width="90px">Name</td>
+                    <td align="right" width="90px">User</td>
+                    <td align="right" width="40px">#</td>
+                    <td align="right" width="40px">I/O</td>
+                    <td align="right" width="50px">CPU</td>
+                    <td align="right" width="50px">Mem</td>
+                </tr>
+                </thead>
+                <tbody id="process-name-list" class="muk-list-select"></tbody>
+            </table>
+            <div>
+            </div>
+        </div>
+        <div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-1-cpu" class="chart-medium"></svg>
+                </span>
+            </div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-2-mem" class="chart-medium"></svg>
+                </span>
+            </div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-3-num" class="chart-medium"></svg>
+                </span>
+            </div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-4-iob" class="chart-medium"></svg>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <template id="process-item-template">
+        <tr>
+            <td></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+        </tr>
+    </template>
+
+</div>
+
+<script type="text/javascript">
+    'use strict';
+
+    const PAGE_SIZE = 25;
+
+    const SORT_NAME = (a, b) => {
+        if (a.key < b.key) {
+            return -1
+        } else if (a.key > b.key) {
+            return 1
+        } else {
+            return 0
+        }
+    };
+
+    const SORT_IO = (a, b) => {
+        if (a.io_total < b.io_total) {
+            return 1
+        } else if (a.io_total > b.io_total) {
+            return -1
+        } else {
+            return SORT_NAME(a, b);
+        }
+    };
+
+    const SORT_CPU = (a, b) => {
+        if (a.cpu < b.cpu) {
+            return 1
+        } else if (a.cpu > b.cpu) {
+            return -1
+        } else {
+            return SORT_NAME(a, b);
+        }
+    };
+
+    const SORT_MEMORY = (a, b) => {
+        if (a.memory < b.memory) {
+            return 1
+        } else if (a.memory > b.memory) {
+            return -1
+        } else {
+            return SORT_NAME(a, b);
+        }
+    };
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-process.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            this.processItemMap = {};
+            this.processStartIndex = 0;
+            this.processItemList = null;
+            this.processCurrent = null;
+            this.sortCurrent = SORT_NAME;
+
+            // Chart 1: cpu
+            let chart_1_cpu = new TimeValueChart(document.getElementById('chart-1-cpu'));
+            chart_1_cpu.setChartTitle("CPU");
+            chart_1_cpu.setSize(560, 220);
+            chart_1_cpu.setCallbacks(host);
+            chart_1_cpu.setDataOptions([
+                {
+                    name: 'cpu',
+                    fill: '#90CAF9c0', line: '#2196F3'
+                },
+            ]);
+            this.chart_1_cpu = chart_1_cpu;
+
+            // Chart 2: used memory
+            let chart_2_mem = new TimeValueChart(document.getElementById('chart-2-mem'));
+            chart_2_mem.setChartTitle("Memory");
+            chart_2_mem.setSize(560, 220);
+            chart_2_mem.setCallbacks(host);
+            chart_2_mem.setDataOptions([
+                {
+                    name: 'memory',
+                    fill: '#CE93D8c0', line: '#9C27B0'
+                },
+            ]);
+            this.chart_2_mem = chart_2_mem;
+
+            // Chart 3: process count
+            let chart_3_num = new TimeValueChart(document.getElementById('chart-3-num'));
+            chart_3_num.setChartTitle("Count");
+            chart_3_num.setSize(560, 220);
+            chart_3_num.setCallbacks(host);
+            chart_3_num.setDataOptions([
+                {
+                    name: 'count',
+                    fill: '#E6EE9Cc0', line: '#CDDC39'
+                },
+            ]);
+            this.chart_3_num = chart_3_num;
+
+            // Chart 4: io bytes
+            let chart_4_iob = new TimeValueChart(document.getElementById('chart-4-iob'));
+            chart_4_iob.setChartTitle("IO bytes");
+            chart_4_iob.setSize(560, 220);
+            chart_4_iob.setCallbacks(host);
+            chart_4_iob.setDataOptions([
+                {
+                    name: 'read (req)',
+                    fill: '#FFE0B2c0', line: '#FF9800'
+                },
+                {
+                    name: 'write (req)',
+                    fill: '#FFCC80c0', line: '#FF9800'
+                },
+                {
+                    name: 'read (blk)',
+                    fill: '#FFB74Dc0', line: '#FF9800'
+                },
+                {
+                    name: 'write (blk)',
+                    fill: '#FFA726c0', line: '#FF9800'
+                },
+            ]);
+            this.chart_4_iob = chart_4_iob;
+
+            chart_4_iob.setValueFormatter(humanDataSizePerSecond);
+
+            // Click handling for sort orders
+            const elSortName = document.getElementById("sort-button-name");
+            const elSortIO = document.getElementById("sort-button-io");
+            const elSortCpu = document.getElementById("sort-button-cpu");
+            const elSortMemory = document.getElementById("sort-button-memory");
+
+            this.sortOrderList = [
+                elSortName, elSortIO, elSortCpu, elSortMemory
+            ];
+            const onSortOrderClick = (e) => {
+                e.preventDefault();
+
+                const order = e.target.sortOrder;
+                if (this.sortCurrent !== order) {
+                    this.sortCurrent = order;
+
+                    this.processItemList.sort(this.sortCurrent);
+                    this.processStartIndex = 0;
+
+                    if (this.processItemList.length > 0) {
+                        this.processCurrent = this.processItemList[0];
+                    } else {
+                        this.processCurrent = null;
+                    }
+
+                    this.setCurrentProcess(this.processCurrent, true);
+                    this.showProcessItemList();
+                    this.showCurrentProcess();
+                    this.showCurrentSortOrder();
+                }
+            };
+            elSortName.sortOrder = SORT_NAME;
+            elSortName.onclick = onSortOrderClick;
+
+            elSortIO.sortOrder = SORT_IO;
+            elSortIO.onclick = onSortOrderClick;
+
+            elSortCpu.sortOrder = SORT_CPU;
+            elSortCpu.onclick = onSortOrderClick;
+
+            elSortMemory.sortOrder = SORT_MEMORY;
+            elSortMemory.onclick = onSortOrderClick;
+
+            // Click handling for pagination UI
+            const elPrev = document.getElementById("nav-list-prev");
+            const elNext = document.getElementById("nav-list-next");
+
+            elPrev.onclick = (e) => {
+                e.preventDefault();
+                if (this.processStartIndex > 0) {
+                    this.processStartIndex -= PAGE_SIZE;
+                    if (this.processStartIndex < 0) {
+                        this.processStartIndex = 0
+                    }
+                    this.showProcessItemList();
+                    this.showCurrentProcess();
+                }
+            };
+
+            elNext.onclick = (e) => {
+                e.preventDefault();
+                if (this.processStartIndex + PAGE_SIZE < this.processItemList.length) {
+                    this.processStartIndex += PAGE_SIZE;
+                    this.showProcessItemList();
+                    this.showCurrentProcess();
+                }
+            };
+            this.loadData(minutes);
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-process.html", name);
+
+            this.chart_1_cpu = null;
+            this.chart_2_mem = null;
+            this.chart_3_num = null;
+            this.chart_4_iob = null;
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+                series: ["process_list"],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/process_overview', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && this.$isMounted) {
+                        this.onDataLoaded(response.data.processes)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(items) {
+            // Sync with process item map
+            if (items != null) {
+                for (let item of items) {
+                    let process = this.processItemMap[item.name];
+                    if (process == null) {
+                        process = new ProcessItem(item);
+                        this.processItemMap[item.name] = process
+                    }
+                }
+            }
+
+            // Put into map
+            this.processItemList = [];
+            for (let k of Object.keys(this.processItemMap)) {
+                this.processItemList.push(this.processItemMap[k])
+            }
+
+            this.processItemList.sort(this.sortCurrent);
+
+            if (this.processCurrent == null && this.processItemList.length > 0) {
+                this.processCurrent = this.processItemList[0]
+            }
+
+            // Show table
+            this.showProcessItemList();
+
+            // Show current process
+            this.setCurrentProcess(this.processCurrent, true);
+
+        },
+        showCurrentSortOrder(elSortOrderList, order) {
+            for (let el of this.sortOrderList) {
+                if (el.sortOrder === this.sortCurrent) {
+                    el.classList.add("btn-secondary");
+                    el.classList.remove("btn-light");
+                } else {
+                    el.classList.remove("btn-secondary");
+                    el.classList.add("btn-light");
+                }
+            }
+        },
+        showProcessItemList() {
+            // Pagination
+            const pageList = this.processItemList.slice(this.processStartIndex, this.processStartIndex + PAGE_SIZE);
+
+            console.log("showProcessItemList: slice from", this.processStartIndex, ", page size", PAGE_SIZE)
+            console.log("Resulting list:", pageList)
+
+            // Sync with html
+            const table = new HtmlSync("process-name-list", "process-item-template");
+            table.syncWithData(pageList, (data) => {
+                console.log("on click for this =", this, "data =", data);
+                this.setCurrentProcess(data, false);
+            }, (node, data) => {
+                const cellList = node.querySelectorAll("td");
+
+                table.setNodeText(cellList[0], data.key);
+                table.setNodeText(cellList[1], data.user);
+                table.setNodeText(cellList[2], data.count);
+                table.setNodeText(cellList[3], humanDataSize(data.io_total));
+                table.setNodeText(cellList[4], fractionalValue(data.cpu));
+                table.setNodeText(cellList[5], humanDataSize(Math.round(data.memory)));
+            });
+
+            // Pagination
+            const elPrev = document.getElementById("nav-list-prev");
+            const elNext = document.getElementById("nav-list-next");
+
+            if (this.processStartIndex > 0) {
+                elPrev.classList.remove("uk-disabled")
+            } else {
+                elPrev.classList.add("uk-disabled")
+            }
+            if (this.processStartIndex + PAGE_SIZE < this.processItemList.length) {
+                elNext.classList.remove("uk-disabled")
+            } else {
+                elNext.classList.add("uk-disabled")
+            }
+        },
+        showCurrentProcess() {
+            const elProcessNameListParent = document.getElementById("process-name-list");
+            const elProcessNameItemList = elProcessNameListParent.querySelectorAll("tr");
+            for (let node of elProcessNameItemList) {
+                if (node.data === this.processCurrent) {
+                    node.classList.add("muk-active");
+                    node.classList.remove("muk-non-active");
+                } else {
+                    node.classList.remove("muk-active");
+                    node.classList.add("muk-non-active");
+                }
+            }
+        },
+        setCurrentProcess(process, force) {
+            console.log("setCurrentProcess", process, force)
+
+            if (this.processCurrent !== process || force) {
+                this.processCurrent = process;
+
+                this.showCurrentProcess();
+
+                if (this.processCurrent != null) {
+                    this.loadProcess(this.processCurrent)
+                } else {
+                    this.chart_1_cpu.setChartTitle("CPU");
+
+                    for (const chart of [this.chart_1_cpu, this.chart_2_mem, this.chart_3_num, this.chart_4_iob]) {
+                        chart.setData(null);
+                        chart.render();
+                    }
+                }
+            }
+        },
+        loadProcess(item) {
+            const req = {
+                node_id: NODE_ID,
+                item: item.key + "|" + item.user,
+                series: ["process_list"],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            const minutes = this.minutes;
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/get', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && this.$isMounted) {
+                        this.onProcessLoaded(item, response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onProcessLoaded(item, data) {
+            console.log('onProcessLoaded');
+
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_cpu = this.chart_1_cpu;
+            const chart_2_mem = this.chart_2_mem;
+            const chart_3_num = this.chart_3_num;
+            const chart_4_iob = this.chart_4_iob;
+
+            chart_1_cpu.setChartTitle("CPU " + item.key);
+
+            // The data
+            if (request == null || series == null) {
+                for (const chart of [this.chart_1_cpu, this.chart_2_mem, this.chart_3_num, this.chart_4_iob]) {
+                    chart.setSeries(null);
+                    chart.render();
+                }
+
+                return;
+            }
+
+            // Data: process read/write ops
+            const
+                series_cpu = TimeValueData.prepareSeries(request, series, "process_list:cpu");
+
+            // Data: process memory
+            const
+                series_mem = TimeValueData.prepareSeries(request, series, "process_list:rss");
+
+            // Data: instance count (number)
+            const
+                series_num = TimeValueData.prepareSeries(request, series, "process_list:instance_count");
+
+            // Data: io bytes
+            const
+                series_chars_read = TimeValueData.prepareSeries(request, series, "process_list:io_chars_read"),
+                series_chars_write = TimeValueData.prepareSeries(request, series, "process_list:io_chars_write"),
+                series_bytes_read = TimeValueData.prepareSeries(request, series, "process_list:io_bytes_read"),
+                series_bytes_write = TimeValueData.prepareSeries(request, series, "process_list:io_bytes_write");
+
+            // The charts
+            chart_1_cpu.setSeries(
+                series_cpu);
+            chart_1_cpu.render();
+
+            chart_2_mem.setValueFormatter(humanDataSize);
+            chart_2_mem.setSeries(
+                series_mem);
+            chart_2_mem.render();
+
+            chart_3_num.setSeries(
+                series_num);
+            chart_3_num.render();
+
+            chart_4_iob.setSeries(
+                series_chars_read, series_chars_write,
+                series_bytes_read, series_bytes_write);
+            chart_4_iob.render()
+        }
+    };
+</script>

@@ -1,0 +1,64 @@
+{
+  "request": {
+    "node_id": "56f202a6-1248-4efe-8549-0daebe93f0b0",
+    "end_time": 1563881032,
+    "point_count": 30,
+    "point_duration": 60
+  },
+  "disks": [
+    {
+      "name": "nvme0n1p3",
+      "read_ops": 0,
+      "write_ops": 6,
+      "space_total": 206156333056,
+      "space_free": 162961647908,
+      "inode_total": 13045757,
+      "inode_free": 12638466
+    },
+    {
+      "name": "sda1",
+      "read_ops": 0,
+      "write_ops": 0,
+      "space_total": 1071628288,
+      "space_free": 1042141184,
+      "inode_total": 0,
+      "inode_free": 0
+    },
+    {
+      "name": "sda3",
+      "read_ops": 0,
+      "write_ops": 5,
+      "space_total": 67104190464,
+      "space_free": 56451275044,
+      "inode_total": 4194304,
+      "inode_free": 3869090
+    },
+    {
+      "name": "sda4",
+      "read_ops": 0,
+      "write_ops": 0,
+      "space_total": 34359734272,
+      "space_free": 34359734272,
+      "inode_total": 0,
+      "inode_free": 0
+    },
+    {
+      "name": "sdd1",
+      "read_ops": 0,
+      "write_ops": 0,
+      "space_total": 107344756736,
+      "space_free": 83478118400,
+      "inode_total": 0,
+      "inode_free": 0
+    },
+    {
+      "name": "sdd2",
+      "read_ops": 0,
+      "write_ops": 0,
+      "space_total": 633999622144,
+      "space_free": 448584146944,
+      "inode_total": 39321600,
+      "inode_free": 39321437
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+<!doctype html>
+
+<div>
+    <div>
+        <span class="timechart">
+            <svg id="chart-1-cpu" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-2-load" class="chart-large"></svg>
+       </span>
+    </div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-3-mem" class="chart-large"></svg>
+       </span>
+    </div>
+
+    <div class="d-flex">
+        <div>
+            <span class="timechart">
+                <svg id="chart-4-net" class="chart-small"></svg>
+           </span>
+        </div>
+        <div>
+            <span class="timechart">
+                <svg id="chart-5-disk" class="chart-small"></svg>
+           </span>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    'use strict';
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-overview.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            // Chart 1: CPU
+            let chart_1_cpu = new TimeValueChart(document.getElementById('chart-1-cpu'));
+            chart_1_cpu.setSize(740, 260);
+            chart_1_cpu.setChartTitle("CPU");
+            chart_1_cpu.setCallbacks(host);
+            chart_1_cpu.setDataOptions([
+                {
+                    name: 'wait',
+                    fill: '#BBDEFBc0', line: '#2196F3'
+                },
+                {
+                    name: 'user',
+                    fill: '#90CAF9c0', line: '#2196F3'
+                },
+                {
+                    name: 'system',
+                    fill: '#64B5F6c0', line: '#2196F3'
+                },
+            ]);
+            this.chart_1_cpu = chart_1_cpu;
+
+            // Chart 2: load average
+            let chart_2_load = new TimeValueChart(document.getElementById('chart-2-load'));
+            chart_2_load.setSize(740, 260);
+            chart_2_load.setChartTitle("Load Avg");
+            chart_2_load.setCallbacks(host);
+            chart_2_load.setDataOptions([
+                {
+                    name: 'Load avg',
+                    fill: '#FFF176c0', line: '#FFEB3B',
+                }
+            ]);
+            this.chart_2_load = chart_2_load;
+
+            // Chart 3: memory
+            let chart_3_mem = new TimeValueChart(document.getElementById('chart-3-mem'));
+            chart_3_mem.setChartTitle("Memory");
+            chart_3_mem.setSize(740, 260);
+            chart_3_mem.setCallbacks(host);
+            chart_3_mem.setDataOptions([
+                {
+                    name: 'used',
+                    fill: '#E1BEE7c0', line: '#9C27B0'
+                },
+                {
+                    name: 'cache',
+                    fill: '#CE93D8c0', line: '#9C27B0'
+                },
+                {
+                    name: 'buffers',
+                    fill: '#BA68C8c0', line: '#9C27B0'
+                },
+                {
+                    name: 'swap',
+                    fill: '#E57373c0', line: '#F44336'
+                },
+            ]);
+            this.chart_3_mem = chart_3_mem;
+
+            // Chart 4: network rx/tx
+            let chart_4_net = new TimeValueChart(document.getElementById('chart-4-net'));
+            chart_4_net.setChartTitle("Network");
+            chart_4_net.setSize(360, 220);
+            chart_4_net.setCallbacks(host);
+            chart_4_net.setDataOptions([
+                {
+                    name: 'rx',
+                    fill: '#A5D6A7c0', line: '#4CAF50'
+                },
+                {
+                    name: 'tx',
+                    fill: '#81C784c0', line: '#4CAF50'
+                }
+            ]);
+            this.chart_4_net = chart_4_net;
+
+            // Chart 4: disk read/write ops
+            let chart_5_disk = new TimeValueChart(document.getElementById('chart-5-disk'));
+            chart_5_disk.setChartTitle("Disk I/O");
+            chart_5_disk.setSize(360, 220);
+            chart_5_disk.setCallbacks(host);
+            chart_5_disk.setDataOptions([
+                {
+                    name: 'read ops',
+                    fill: '#FFCC80c0', line: '#FF9800'
+                },
+                {
+                    name: 'write ops',
+                    fill: '#FFB74Dc0', line: '#FF9800'
+                },
+            ]);
+            this.chart_5_disk = chart_5_disk;
+
+            // Load data
+            this.loadData();
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onEndTime(end_time) {
+            this.end_time = end_time;
+            this.loadData();
+        },
+        onTimePeriod(minutes) {
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-overview.html", name);
+
+            this.chart_1_cpu = null;
+            this.chart_2_load = null;
+            this.chart_3_mem = null;
+            this.chart_4_net = null;
+            this.chart_5_disk = null;
+        },
+        loadData() {
+            console.log("loadData, end_time =", this.end_time, ", minutes =", this.minutes);
+
+            const req = {
+                node_id: NODE_ID,
+                series: ['cpu', 'mem', 'net', 'disk'],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/get', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && this.$isMounted) {
+                        console.log("calling onDataLoaded");
+                        this.onDataLoaded(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(data) {
+            console.log('onDataLoaded');
+
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_cpu = this.chart_1_cpu;
+            const chart_2_load = this.chart_2_load;
+            const chart_3_mem = this.chart_3_mem;
+            const chart_4_net = this.chart_4_net;
+            const chart_5_disk = this.chart_5_disk;
+
+            // The data
+            if (request == null || series == null) {
+                chart_1_cpu.setSeries(null);
+                chart_1_cpu.render();
+
+                chart_2_load.setSeries(null);
+                chart_2_load.render();
+
+                chart_3_mem.setSeries(null);
+                chart_3_mem.render();
+
+                chart_4_net.setSeries(null);
+                chart_4_net.render();
+
+                chart_5_disk.setSeries(null);
+                chart_5_disk.render();
+
+                return;
+            }
+
+            // Data: cpu
+            const
+                series_cpu_wait = TimeValueData.prepareSeries(request, series, "cpu:wait"),
+                series_cpu_user = TimeValueData.prepareSeries(request, series, "cpu:user"),
+                series_cpu_system = TimeValueData.prepareSeries(request, series, "cpu:system");
+
+            // Data: cpu load average
+            const
+                series_load = TimeValueData.prepareSeries(request, series, "cpu:load_avg");
+
+            // Data: mem
+            const
+                series_mem_used = TimeValueData.prepareSeries(request, series, "mem:real_used"),
+                series_mem_cache = TimeValueData.prepareSeries(request, series, "mem:real_cache"),
+                series_mem_buffers = TimeValueData.prepareSeries(request, series, "mem:real_buffers"),
+                series_mem_swap = TimeValueData.prepareSeries(request, series, "mem:swap_used");
+
+            for (let i in series_mem_used) {
+                if (series_mem_used[i].v != null) {
+                    series_mem_used[i].v -= series_mem_cache[i].v + series_mem_buffers[i].v;
+                    if (series_mem_used[i].v < 0) {
+                        series_mem_used[i].v = 0;
+                    }
+                }
+            }
+
+            // Data: network tx/rx
+            const
+                series_net_rx = TimeValueData.prepareSeries(request, series, "net:rx"),
+                series_net_tx = TimeValueData.prepareSeries(request, series, "net:tx");
+
+            // Data: disk read/write ops
+            const
+                series_disk_read_ops = TimeValueData.prepareSeries(request, series, "disk:combined_read_count"),
+                series_disk_write_ops = TimeValueData.prepareSeries(request, series, "disk:combined_write_count");
+
+            // The charts
+            chart_1_cpu.setSeries(
+                series_cpu_wait, series_cpu_user, series_cpu_system);
+            chart_1_cpu.render();
+
+            chart_2_load.setSeries(
+                series_load);
+            chart_2_load.render();
+
+            chart_3_mem.setSeries(
+                series_mem_used, series_mem_cache, series_mem_buffers, series_mem_swap);
+            chart_3_mem.setValueFormatter(humanDataSize);
+            chart_3_mem.render();
+
+            chart_4_net.setSeries(
+                series_net_rx, series_net_tx);
+            chart_4_net.setValueFormatter(humanDataSizePerSecond);
+            chart_4_net.render();
+
+            chart_5_disk.setSeries(
+                series_disk_read_ops, series_disk_write_ops);
+            chart_5_disk.render();
+        }
+};
+
+</script>

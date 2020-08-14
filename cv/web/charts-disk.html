@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<div>
+    <div class="d-flex">
+        <div>
+            <table class="muk-data-table">
+                <thead>
+                <tr>
+                    <td width="90px">Name</td>
+                    <td align="right" width="60px">Read</td>
+                    <td align="right" width="60px">Write</td>
+                    <td align="right" width="60px">Space</td>
+                    <td align="right" width="60px">INodes</td>
+                </tr>
+                </thead>
+                <tbody id="disk-name-list" class="muk-list-select"></tbody>
+            </table>
+        </div>
+
+        <div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-1-disk" class="chart-medium"></svg>
+                </span>
+            </div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-2-bytes" class="chart-medium"></svg>
+                </span>
+            </div>
+            <div>
+                <span class="timechart">
+                    <svg id="chart-3-inodes" class="chart-medium"></svg>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <template id="disk-item-template">
+        <tr>
+            <td></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+        </tr>
+    </template>
+</div>
+
+<script type="text/javascript">
+    'use strict';
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-disk.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            this.diskItemMap = {};
+            this.diskItemList = [];
+            this.diskCurrent = null;
+
+            // Chart 1: disk read/write ops per second
+            let chart_1_ops = new TimeValueChart(document.getElementById('chart-1-disk'));
+            chart_1_ops.setChartTitle("Disk I/O");
+            chart_1_ops.setSize(560, 220);
+            chart_1_ops.setCallbacks(host);
+            chart_1_ops.setDataOptions([
+                {
+                    name: 'read ops',
+                    fill: '#FFCC80c0', line: '#FF9800'
+                },
+                {
+                    name: 'write ops',
+                    fill: '#FFB74Dc0', line: '#FF9800'
+                },
+            ]);
+            this.chart_1_ops = chart_1_ops;
+
+            // Chart 2: used bytes
+            let chart_2_bytes = new TimeValueChart(document.getElementById('chart-2-bytes'));
+            chart_2_bytes.setChartTitle("Used space");
+            chart_2_bytes.setValueFormatter(humanDataSize);
+            chart_2_bytes.setSize(560, 220);
+            chart_2_bytes.setCallbacks(host);
+            chart_2_bytes.setDataOptions([
+                {
+                    name: 'space',
+                    fill: '#FFAB91c0', line: '#FF5722'
+                },
+            ]);
+            this.chart_2_bytes = chart_2_bytes;
+
+            // Chart 3: used inodes
+            let chart_3_inodes = new TimeValueChart(document.getElementById('chart-3-inodes'));
+            chart_3_inodes.setChartTitle("Used inodes");
+            chart_3_inodes.setSize(560, 220);
+            chart_3_inodes.setCallbacks(host);
+            chart_3_inodes.setDataOptions([
+                {
+                    name: 'inodes',
+                    fill: '#BCAAA4c0', line: '#795548'
+                },
+            ]);
+            this.chart_3_inodes = chart_3_inodes;
+
+            this.loadData();
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-disk.html", name);
+
+            this.chart_1_ops = null;
+            this.chart_2_bytes = null;
+            this.chart_3_inodes = null;
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+                series: ["disk_list"],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/disk_overview', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && this.$isMounted) {
+                        this.onDataLoaded(response.data.disks)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(items) {
+            // Sync with disk item map
+            if (items) {
+                for (let item of items) {
+                    let disk = this.diskItemMap[item.name];
+                    if (disk == null) {
+                        disk = new DiskItem(item);
+                        this.diskItemMap[item.name] = disk
+                    }
+                }
+            }
+
+            // Put into map
+            this.diskItemList = [];
+            for (let k of Object.keys(this.diskItemMap).sort()) {
+                this.diskItemList.push(this.diskItemMap[k])
+            }
+
+            if (this.diskCurrent == null && this.diskItemList.length > 0) {
+                this.diskCurrent = this.diskItemList[0]
+            }
+
+            // Sync with html
+            const table = new HtmlSync("disk-name-list", "disk-item-template");
+            table.syncWithData(this.diskItemList, (data) => {
+                console.log("on click for this =", this, "data =", data);
+                this.setCurrentDisk(data, false);
+            }, (node, data) => {
+                const cellList = node.querySelectorAll("td");
+                table.setNodeText(cellList[0], data.key);
+                table.setNodeText(cellList[1], data.read_ops);
+                table.setNodeText(cellList[2], data.write_ops);
+                table.setNodeText(cellList[3],
+                    percentValue(data.space_total - data.space_free, data.space_total));
+                table.setNodeText(cellList[4],
+                    percentValue(data.inode_total - data.inode_free, data.inode_total));
+            });
+
+            this.setCurrentDisk(this.diskCurrent, true);
+        },
+        setCurrentDisk(disk, force) {
+            if (this.diskCurrent !== disk || force) {
+                this.diskCurrent = disk;
+
+                const elDiskNameListParent = document.getElementById("disk-name-list");
+                const elDiskNameItemList = elDiskNameListParent.querySelectorAll("tr");
+
+                for (let node of elDiskNameItemList) {
+                    if (node.data === this.diskCurrent) {
+                        node.classList.add("muk-active");
+                        node.classList.remove("muk-non-active");
+                    } else {
+                        node.classList.remove("muk-active");
+                        node.classList.add("muk-non-active");
+                    }
+                }
+
+                if (this.diskCurrent != null) {
+                    this.loadDisk(this.diskCurrent)
+                } else {
+                    this.chart_1_ops.setChartTitle("Disk I/O");
+
+                    for (const chart of [this.chart_1_ops, this.chart_2_bytes, this.chart_3_inodes]) {
+                        chart.setData(null);
+                        chart.render();
+                    }
+                }
+            }
+        },
+        onDiskLoaded(item, data) {
+            console.log('loadDataDone');
+
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_ops = this.chart_1_ops;
+            const chart_2_bytes = this.chart_2_bytes;
+            const chart_3_inodes = this.chart_3_inodes;
+
+            // The data
+            if (request == null || series == null) {
+                for (const chart of [this.chart_1_ops, this.chart_2_bytes, this.chart_3_inodes]) {
+                    chart.setSeries(null);
+                    chart.render();
+                }
+
+                return;
+            }
+
+            chart_1_ops.setChartTitle("Disk I/O: " + request.item);
+
+            // Data: disk read/write ops
+            const
+                series_disk_read_ops = TimeValueData.prepareSeries(request, series, "disk_list:read_count"),
+                series_disk_write_ops = TimeValueData.prepareSeries(request, series, "disk_list:write_count");
+
+            // Data: disk "used" bytes
+            const
+                series_disk_total_bytes = TimeValueData.prepareSeries(request, series, "disk_list:total_bytes"),
+                series_disk_free_bytes = TimeValueData.prepareSeries(request, series, "disk_list:free_bytes"),
+                series_disk_used_bytes = TimeValueData.prepareSeriesDiff(
+                    series_disk_total_bytes, series_disk_free_bytes),
+                series_disk_max_bytes = TimeValueData.getMaxValue(series_disk_total_bytes);
+
+            // Data: disk "used" inodes
+            const
+                series_disk_total_inodes = TimeValueData.prepareSeries(request, series, "disk_list:total_inodes"),
+                series_disk_free_inodes = TimeValueData.prepareSeries(request, series, "disk_list:free_inodes"),
+                series_disk_used_inodes = TimeValueData.prepareSeriesDiff(
+                    series_disk_total_inodes, series_disk_free_inodes),
+                series_disk_max_inodes = TimeValueData.getMaxValue(series_disk_total_inodes);
+
+            // The charts
+            chart_1_ops.setSeries(
+                series_disk_read_ops, series_disk_write_ops);
+            chart_1_ops.render();
+
+            chart_2_bytes.setSeries(
+                series_disk_used_bytes);
+            chart_2_bytes.setDataMaxY(series_disk_max_bytes || 128 * 1024 * 1024);
+            chart_2_bytes.render();
+
+            chart_3_inodes.setSeries(
+                series_disk_used_inodes);
+            chart_3_inodes.setDataMaxY(series_disk_max_inodes || 8 * 1024 * 1024);
+            chart_3_inodes.render();
+        },
+        loadDisk(item) {
+            const req = {
+                node_id: NODE_ID,
+                item: item.key,
+                series: ["disk_list"],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/get', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data) {
+                        this.onDiskLoaded(item, response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        }
+    };
+
+</script>

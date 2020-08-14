@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+          rel="stylesheet">
+    <title>Clearview download</title>
+    <style>
+        table.downloads {
+            margin-left: 8px;
+            border-collapse: separate;
+            border-spacing: 8px 8px;
+        }
+
+        table.downloads td {
+            vertical-align: top;
+        }
+
+        div.what-section {
+            padding-left: 16px;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .container a {
+            text-decoration: none;
+            background-image: linear-gradient(currentColor, currentColor);
+            background-position: 0 100%;
+            background-repeat: no-repeat;
+            background-size: 0 1px;
+            transition: background-size .3s;
+        }
+        .container a:hover {
+            background-size: 100% 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h3>Agent downloads</h3>
+
+    <div class="what-section">
+
+        <h4>For Debian, Ubuntu</h4>
+        <table class="downloads">
+            <tr>
+                <td>AMD64 (Intel 64-bit)</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_amd64.deb">
+                        clearview-agent_0.2.0-5_amd64.deb</a></td>
+            </tr>
+            <tr>
+                <td>i386 (Intel 32-bit)</td>
+                <td><a href="./download/clearview-agent_0.2.0-5_i386.deb">
+                        clearview-agent_0.2.0-5_i386.deb</a></td>
+            </tr>
+            <tr>
+                <td>arm64 (ARM 64-bit)</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_arm64.deb">
+                        clearview-agent_0.2.0-5_arm64.deb</a></td>
+            </tr>
+            <tr>
+                <td>armhf (ARM 32-bit)</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_armhf.deb">
+                        clearview-agent_0.2.0-5_armhf.deb</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely AMD64)<br>
+                    and install with <code>sudo dpkg -i &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+
+        <h4>For Fedora, CentOS</h4>
+        <table class="downloads">
+            <tr>
+                <td>x86_64 (Intel 64-bit)</td>
+                <td><a href="/download/clearview-agent-0.2.0-5.x86_64.rpm">
+                        clearview-agent-0.2.0-5.x86_64.rpm</a></td>
+            </tr>
+            <tr>
+                <td>i386 (Intel 32-bit)</td>
+                <td><a href="./download/clearview-agent-0.2.0-5.i386.rpm">
+                        clearview-agent-0.2.0-5.i386.rpm</a></td>
+            </tr>
+            <tr>
+                <td>arm64 (ARM 64-bit)</td>
+                <td><a href="/download/clearview-agent-0.2.0-5.aarch64.rpm">
+                        clearview-agent-0.2.0-5.aarch64.rpm</a></td>
+            </tr>
+            <tr>
+                <td>armv7hl (ARM 32-bit)</td>
+                <td><a href="/download/clearview-agent-0.2.0-5.armv7hl.rpm">
+                        clearview-agent-0.2.0-5.armv7hl.rpm</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely x86_64)<br>
+                    and install with <code>sudo rpm -Uhv &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+
+        <h4>For any Linux distro</h4>
+        <table class="downloads">
+            <tr>
+                <td>Intel 64-bit</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_amd64.tar.gz">
+                        clearview-agent_0.2.0-5_amd64.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>Intel 32-bit</td>
+                <td><a href="./download/clearview-agent_0.2.0-5_i386.tar.gz">
+                        clearview-agent_0.2.0-5_i386.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>ARM 64-bit</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_arm64.tar.gz">
+                        clearview-agent_0.2.0-5_arm64.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>ARM 32-bit</td>
+                <td><a href="/download/clearview-agent_0.2.0-5_armhf.tar.gz">
+                        clearview-agent_0.2.0-5_armhf.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely Intel 64 bit)<br>
+                    and extract with <code>sudo tar -C / -xvf &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+        <h4>Post-installation configuration</h4>
+
+        <p>Please edit <code>/etc/clearview.conf</code> to provide:
+        <ul>
+            <li>ClearView server address as <code>server_addr</code></li>
+            <li>The username and the password from <code>/etc/clearview-server.conf</code> on the ClearView server</li>
+            <li>This machine's node id (should be created in ClearView server web UI) as <code>node_id</code></li>
+        </ul>
+
+        <p><code>
+                server_addr: 111.222.33.44<br>
+                auth_username: monitoring_with_clearview<br>
+                auth_password: !s_ea6y_and_7un<br>
+                node_id: 19edcd32-abcd-1234-9664-16e11a5aa90f<br>
+                mysql_username: whatever_it_is<br>
+                mysql_password: the_password_goes_here
+            </code>
+
+        <p>Finally, enable the agent service with <code>sudo systemctl enable clearview-agent</code>
+            and make sure it's started with <code>sudo systemctl restart clearview-agent</code>.</p>
+    </div>
+
+    <h3>Server downloads</h3>
+
+    <div class="what-section">
+        
+        <h4>For Debian, Ubuntu</h4>
+        <table class="downloads">
+            <tr>
+                <td>AMD64 (Intel 64-bit)</td>
+                <td><a href="/download/clearview-server_0.2.0-5_amd64.deb">
+                        clearview-server_0.2.0-5_amd64.deb</a></td>
+            </tr>
+            <tr>
+                <td>i386 (Intel 32-bit)</td>
+                <td><a href="./download/clearview-server_0.2.0-5_i386.deb">
+                        clearview-server_0.2.0-5_i386.deb</a></td>
+            </tr>
+            <tr>
+                <td>arm64 (ARM 64-bit)</td>
+                <td><a href="/download/clearview-server_0.2.0-5_arm64.deb">
+                        clearview-server_0.2.0-5_arm64.deb</a></td>
+            </tr>
+            <tr>
+                <td>armhf (ARM 32-bit)</td>
+                <td><a href="/download/clearview-server_0.2.0-5_armhf.deb">
+                        clearview-server_0.2.0-5_armhf.deb</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely AMD64)<br>
+                    and install with <code>sudo dpkg -i &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+        
+        <h4>For Fedora, CentOS</h4>
+        <table class="downloads">
+            <tr>
+                <td>x86_64 (Intel 64-bit)</td>
+                <td><a href="/download/clearview-server-0.2.0-5.x86_64.rpm">
+                        clearview-server-0.2.0-5.x86_64.rpm</a></td>
+            </tr>
+            <tr>
+                <td>i386 (Intel 32-bit)</td>
+                <td><a href="./download/clearview-server-0.2.0-5.i386.rpm">
+                        clearview-server-0.2.0-5.i386.rpm</a></td>
+            </tr>
+            <tr>
+                <td>arm64 (ARM 64-bit)</td>
+                <td><a href="/download/clearview-server-0.2.0-5.aarch64.rpm">
+                        clearview-server-0.2.0-5.aarch64.rpm</a></td>
+            </tr>
+            <tr>
+                <td>armv7hl (ARM 32-bit)</td>
+                <td><a href="/download/clearview-server-0.2.0-5.armv7hl.rpm">
+                        clearview-server-0.2.0-5.armv7hl.rpm</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely x86_64)<br>
+                    and install with <code>sudo rpm -Uhv &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+        
+        <h4>For any Linux distro</h4>
+        <table class="downloads">
+            <tr>
+                <td>Intel 64-bit</td>
+                <td><a href="/download/clearview-server_0.2.0-5_amd64.tar.gz">
+                        clearview-server_0.2.0-5_amd64.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>Intel 32-bit</td>
+                <td><a href="./download/clearview-server_0.2.0-5_i386.tar.gz">
+                        clearview-server_0.2.0-5_i386.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>ARM 64-bit</td>
+                <td><a href="/download/clearview-server_0.2.0-5_arm64.tar.gz">
+                        clearview-server_0.2.0-5_arm64.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>ARM 32-bit</td>
+                <td><a href="/download/clearview-server_0.2.0-5_armhf.tar.gz">
+                        clearview-agent_0.2.0-5_armhf.tar.gz</a></td>
+            </tr>
+            <tr>
+                <td>Installation</td>
+                <td>Download the right file for your system's architecture (most likely Intel 64 bit)<br>
+                    and extract with <code>sudo tar -C / -xvf &lt;the_file&gt;</code>
+                </td>
+            </tr>
+        </table>
+
+        <h4>Post-installation configuration</h4>
+
+        <p>Please edit <code>/etc/clearview-server.conf</code> to provide:
+        <ul>
+            <li>The username and the password for agent authentication</li>
+        </ul>
+
+        <p><code>
+                auth_username: monitoring_with_clearview<br>
+                auth_password: !s_ea6y_and_7un
+            </code>
+
+        <p>Finally, enable the server service with <code>sudo systemctl enable clearview-server</code>
+            and make sure it's started with <code>sudo systemctl restart clearview-server</code>.</p>
+    </div>
+
+    <h3>All files</h3>
+
+    <div class="what-section">
+        <p>You can also view all the files in the <a href="/download/">download directory</a>.</p>
+    </div>
+</div>
+
+</body>
+</html>

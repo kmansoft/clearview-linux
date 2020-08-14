@@ -1,0 +1,15 @@
+Package: clearview-server
+Maintainer: Kostya Vasilyev <kmansoft@gmail.com>
+Depends: libc6 (>= 2.7-1)
+Section: net
+Priority: optional
+Homepage: https://clearview.rocks
+License: GPLv2
+Description: A simple monitoring system for Linux servers
+ .
+ Features:
+ .
+  * Inspired by Linode Longview.
+  * Very little configuration, install and start using.
+  * Monitors system metrics: network, disk, system info.
+  * Monitors apps: Nginx, Apache, MySQL.

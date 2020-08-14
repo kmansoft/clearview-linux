@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div id="card-1"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div id="card-2-cpu-model"></div>
+                    <div id="card-2-cpu-count"></div>
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="100%"
+                             height="24">
+                            <rect fill="#E0E0E0"
+                                  width="100%"
+                                  height="24"></rect>
+                            <rect id="card-2-svg-fill"
+                                  fill="#2196F3"
+                                  width="0%"
+                                  height="24"></rect>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div id="card-3-svg-text-real"></div>
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="100%"
+                             height="24">
+                            <rect fill="#E0E0E0"
+                                  width="100%"
+                                  height="24"></rect>
+                            <rect id="card-3-svg-fill-real"
+                                  fill="#BA68C8"
+                                  width="0%"
+                                  height="24"></rect>
+                        </svg>
+                    </div>
+                    <div id="card-3-svg-text-swap"></div>
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="100%"
+                             height="24">
+                            <rect fill="#E0E0E0"
+                                  width="100%"
+                                  height="24"></rect>
+                            <rect id="card-3-svg-fill-swap"
+                                  fill="#E57373"
+                                  width="0%"
+                                  height="24"></rect>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div id="card-4-txt"></div>
+                    <div id="card-4-svg">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="100%"
+                             height="32">
+                            <rect fill="#E0E0E0"
+                                  width="100%"
+                                  height="32"></rect>
+                            <rect id="card-4-svg-fill"
+                                  fill="#FFB74D"
+                                  width="0%"
+                                  height="32"></rect>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="h4">Listening services</div>
+                    <table class="muk-data-table muk-tiny-table">
+                        <thead>
+                        <tr>
+                            <td>Process</td>
+                            <td align="right">User</td>
+                            <td align="right">Protocol</td>
+                            <td align="right">Port</td>
+                            <td align="right">Address</td>
+                        </tr>
+                        </thead>
+                        <tbody id="process-listen-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="h4">Active connections</div>
+                    <table class="muk-data-table muk-tiny-table">
+                        <thead>
+                        <tr>
+                            <td>Name</td>
+                            <td align="right">User</td>
+                            <td align="right">Count</td>
+                        </tr>
+                        </thead>
+                        <tbody id="process-active-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <template id="process-listen-template">
+        <tr>
+            <td></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+            <td align="right"></td>
+        </tr>
+    </template>
+
+    <template id="process-active-template">
+        <tr>
+            <td></td>
+            <td align="right"></td>
+            <td align="right"></td>
+        </tr>
+    </template>
+
+</div>
+
+
+<script type="text/javascript">
+    'use strict';
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(node, refs) {
+            console.log("***** Mounted charts-system.html", name);
+
+            this.refs = refs;
+
+            this.chart_1_cpu = null;
+            this.chart_2_mem = null;
+            this.chart_3_num = null;
+            this.chart_4_iob = null;
+
+            this.loadData()
+        },
+        onRefresh() {
+            this.loadData();
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+            };
+            http.post('/cv/api/v1/system_overview', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && response.data && this.$isMounted) {
+                        this.onDataLoaded(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(data) {
+            if (data.system_text) {
+                const el1 = document.getElementById('card-1');
+                this.removeAllChildren(el1);
+
+                this.addTextNode(el1, data.system_text.os_dist_label + " " + data.system_text.os_version_label);
+                this.addTextNode(el1, data.system_text.kernel_label);
+
+                if (data.system_text.app_apache_version) {
+                    let value = data.system_text.app_apache_version;
+                    if (!value.startsWith("Apache")) {
+                        value = "Apache " + value
+                    }
+                    this.addTextNode(el1, value)
+                }
+
+                if (data.system_text.app_nginx_version) {
+                    let value = data.system_text.app_nginx_version;
+                    if (!value.startsWith("nginx")) {
+                        value = "nginx " + value
+                    }
+                    this.addTextNode(el1, value)
+                }
+
+                if (data.system_text.app_mysql_version) {
+                    let value = data.system_text.app_mysql_version;
+                    if (!value.startsWith("MySql")) {
+                        value = "MySql " + value
+                    }
+                    this.addTextNode(el1, value)
+                }
+
+                if (data.system_text.app_pgsql_version) {
+                    let value = data.system_text.app_pgsql_version;
+                    if (!value.startsWith("PostgreSQL")) {
+                        value = "PostgreSQL " + value
+                    }
+                    this.addTextNode(el1, value)
+                }
+
+                const el2_model = document.getElementById('card-2-cpu-model');
+                this.removeAllChildren(el2_model);
+                this.addTextNode(el2_model, data.system_text.cpu_label);
+            }
+
+            if (data.system_numeric) {
+                const el2_count = document.getElementById('card-2-cpu-count');
+                this.removeAllChildren(el2_count);
+                this.addTextNode(el2_count, data.system_numeric.value_cpun + " core(s)");
+
+                const el_card2_fill = document.getElementById("card-2-svg-fill");
+                const el_card2_size =
+                    data.system_numeric.value_cpu;
+                el_card2_fill.setAttribute("width", el_card2_size + "%");
+            }
+
+            if (data.memory) {
+                const el3_text_real = document.getElementById('card-3-svg-text-real');
+                this.removeAllChildren(el3_text_real);
+                this.addTextNode(el3_text_real, "Memory: " + humanDataSize(data.memory.mem_real_size));
+                const el3_text_real_size =
+                    data.memory.mem_real_size > 0
+                        ? data.memory.mem_real_used * 100 / data.memory.mem_real_size
+                        : 0;
+                const el3_text_real_fill = document.getElementById('card-3-svg-fill-real');
+                el3_text_real_fill.setAttribute("width", el3_text_real_size + "%");
+
+                const el3_text_swap = document.getElementById('card-3-svg-text-swap');
+                this.removeAllChildren(el3_text_swap);
+                this.addTextNode(el3_text_swap, "Swap: " + humanDataSize(data.memory.mem_swap_size));
+                const el3_text_swap_size =
+                    data.memory.mem_swap_size > 0
+                        ? data.memory.mem_swap_used * 100 / data.memory.mem_swap_size
+                        : 0;
+                const el3_text_swap_fill = document.getElementById('card-3-svg-fill-swap');
+                el3_text_swap_fill.setAttribute("width", el3_text_swap_size + "%");
+
+                const el4 = document.getElementById('card-4-txt');
+                this.removeAllChildren(el4);
+
+                this.addTextNode(el4, "Total disk size: " + humanDataSize(data.memory.disk_total_size));
+                this.addTextNode(el4, "Total disk used: " + humanDataSize(data.memory.disk_total_used));
+
+                const el_card4_fill = document.getElementById("card-4-svg-fill");
+                const el_card4_size =
+                    data.memory.disk_total_size > 0
+                        ? data.memory.disk_total_used * 100 / data.memory.disk_total_size
+                        : 0;
+                el_card4_fill.setAttribute("width", el_card4_size + "%");
+            }
+
+            if (data.ports && data.ports.listen) {
+                data.ports.listen.sort((a, b) => {
+                    if (a.name < b.name) {
+                        return -1
+                    } else if (a.name > b.name) {
+                        return 1
+                    } else {
+                        return 0
+                    }
+                });
+
+                for (let p of data.ports.listen) {
+                    p.key = p.name + "." + p.user + "-" + p.type + "-" + p.src_addr + ":" + p.src_port
+                }
+
+                const table = new HtmlSync("process-listen-tbody", "process-listen-template");
+                table.syncWithData(data.ports.listen, null, (node, data) => {
+                    const cellList = node.querySelectorAll("td");
+
+                    table.setNodeText(cellList[0], data.name);
+                    table.setNodeText(cellList[1], data.user);
+                    table.setNodeText(cellList[2], data.type);
+                    table.setNodeText(cellList[3], data.src_port);
+                    table.setNodeText(cellList[4], data.src_addr);
+                });
+            } else {
+                const elProcessListenBody = document.getElementById("process-listen-tbody");
+                this.removeAllChildren(elProcessListenBody);
+            }
+
+
+            if (data.ports && data.ports.active) {
+                data.ports.active.sort((a, b) => {
+                    if (a.name < b.name) {
+                        return -1
+                    } else if (a.name > b.name) {
+                        return 1
+                    } else {
+                        return 0
+                    }
+                });
+
+                for (let p of data.ports.active) {
+                    p.key = p.name + "." + p.user + "-" + p.count
+                }
+
+                const table = new HtmlSync("process-active-tbody", "process-active-template");
+                table.syncWithData(data.ports.active, null, (node, data) => {
+                    const cellList = node.querySelectorAll("td");
+
+                    table.setNodeText(cellList[0], data.name);
+                    table.setNodeText(cellList[1], data.user);
+                    table.setNodeText(cellList[2], data.count);
+                });
+            } else {
+                const elProcessListenActive = document.getElementById("process-active-tbody");
+                removeAllChildren(elProcessListenActive);
+            }
+        },
+        removeAllChildren(el) {
+            while (el.firstChild) {
+                el.removeChild(el.firstChild);
+            }
+        },
+        addTextNode(el, text) {
+            const div = document.createElement("div");
+            el.appendChild(div);
+            div.innerText = text
+        }
+    };
+
+</script>

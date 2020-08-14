@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-1-queries" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div class="d-flex">
+        <div>
+            <span class="timechart">
+                <svg id="chart-2-bytes" class="chart-small"></svg>
+            </span>
+        </div>
+
+        <div>
+            <span class="timechart">
+                <svg id="chart-3-connections" class="chart-small"></svg>
+            </span>
+        </div>
+    </div>
+
+
+    <div class="d-flex">
+        <div>
+            <span class="timechart">
+                <svg id="chart-4-slow" class="chart-small"></svg>
+            </span>
+        </div>
+
+        <div>
+            <span class="timechart">
+                <svg id="chart-5-aborted" class="chart-small"></svg>
+            </span>
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+    'use strict';
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-mysql.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            // Chart 1: queries
+            let chart_1_queries = new TimeValueChart(document.getElementById('chart-1-queries'));
+            chart_1_queries.setSize(740, 260);
+            chart_1_queries.setChartTitle("Queries");
+            chart_1_queries.setCallbacks(host);
+            chart_1_queries.setDataOptions([
+                {
+                    name: 'select',
+                    fill: '#BBDEFBc0', line: '#2196F3'
+                },
+                {
+                    name: 'insert',
+                    fill: '#90CAF9c0', line: '#2196F3'
+                },
+                {
+                    name: 'update',
+                    fill: '#64B5F6c0', line: '#2196F3'
+                },
+                {
+                    name: 'delete',
+                    fill: '#42A5F5c0', line: '#2196F3'
+                },
+            ]);
+            this.chart_1_queries = chart_1_queries;
+
+            // Chart 2: bytes
+            let chart_2_byte_count = new TimeValueChart(document.getElementById('chart-2-bytes'));
+            chart_2_byte_count.setSize(360, 220);
+            chart_2_byte_count.setChartTitle("Bytes");
+            chart_2_byte_count.setCallbacks(host);
+            chart_2_byte_count.setDataOptions([
+                {
+                    name: 'received',
+                    fill: '#A5D6A7c0', line: '#4CAF50'
+                },
+                {
+                    name: 'sent',
+                    fill: '#81C784c0', line: '#4CAF50'
+                },
+            ]);
+            this.chart_2_byte_count = chart_2_byte_count;
+
+            // Chart 3: connections
+            let chart_3_connections = new TimeValueChart(document.getElementById('chart-3-connections'));
+            chart_3_connections.setChartTitle("Connections");
+            chart_3_connections.setSize(360, 220);
+            chart_3_connections.setCallbacks(host);
+            chart_3_connections.setDataOptions([
+                {
+                    name: 'conns',
+                    fill: '#B0BEC5c0', line: '#607D8B'
+                },
+            ]);
+            this.chart_3_connections = chart_3_connections
+
+            // Chart 4: slow queries
+            let chart_4_slow_queries = new TimeValueChart(document.getElementById('chart-4-slow'));
+            chart_4_slow_queries.setChartTitle("Slow queries");
+            chart_4_slow_queries.setSize(360, 220);
+            chart_4_slow_queries.setCallbacks(host);
+            chart_4_slow_queries.setDataOptions([
+                {
+                    name: 'queries',
+                    fill: '#F48FB1c0', line: '#E91E63'
+                },
+            ]);
+            this.chart_4_slow_queries = chart_4_slow_queries;
+
+            // Chart 5: aborted connections / clients
+            let chart_5_aborted = new TimeValueChart(document.getElementById('chart-5-aborted'));
+            chart_5_aborted.setChartTitle("Aborted");
+            chart_5_aborted.setSize(360, 220);
+            chart_5_aborted.setCallbacks(host);
+            chart_5_aborted.setDataOptions([
+                {
+                    name: 'conns',
+                    fill: '#EF9A9Ac0', line: '#F44336'
+                },
+                {
+                    name: 'clients',
+                    fill: '#E57373c0', line: '#F44336'
+                },
+            ]);
+            this.chart_5_aborted = chart_5_aborted;
+
+            this.loadData();
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-mysql.html", name);
+
+            this.chart_1_queries = null;
+            this.chart_2_byte_count = null;
+            this.chart_3_connections = null;
+            this.chart_4_slow_queries = null;
+            this.chart_5_aborted = null;
+
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/app_mysql', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data) {
+                        this.onDataLoaded(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(data) {
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_queries = this.chart_1_queries;
+            const chart_2_byte_count = this.chart_2_byte_count;
+            const chart_3_connections = this.chart_3_connections;
+            const chart_4_slow_queries = this.chart_4_slow_queries;
+            const chart_5_aborted = this.chart_5_aborted;
+
+            // The data
+            if (request == null || series == null) {
+                chart_1_queries.setSeries(null);
+                chart_1_queries.render();
+
+                chart_2_byte_count.setSeries(null);
+                chart_2_byte_count.render();
+
+                chart_3_connections.setSeries(null);
+                chart_3_connections.render();
+
+                chart_4_slow_queries.setSeries(null);
+                chart_4_slow_queries.render();
+
+                chart_5_aborted.setSeries(null);
+                chart_5_aborted.render();
+
+                return;
+            }
+
+            // Data: queries
+            const
+                series_1_queries_select = TimeValueData.prepareSeries(request, series, "app_mysql:com_select"),
+                series_1_queries_insert = TimeValueData.prepareSeries(request, series, "app_mysql:com_insert"),
+                series_1_queries_update = TimeValueData.prepareSeries(request, series, "app_mysql:com_update"),
+                series_1_queries_delete = TimeValueData.prepareSeries(request, series, "app_mysql:com_delete");
+
+            // Data: byte count
+            const
+                // Yes we need to switch received / sent
+                series_2_bytes_sent = TimeValueData.prepareSeries(request, series, "app_mysql:bytes_sent"),
+                series_2_bytes_received = TimeValueData.prepareSeries(request, series, "app_mysql:bytes_received");
+
+            // Data: connections
+            const
+                series_3_connections = TimeValueData.prepareSeries(request, series, "app_mysql:connections");
+
+            // Data: slow queries
+            const
+                series_4_slow_queries = TimeValueData.prepareSeries(request, series, "app_mysql:slow_queries");
+
+            // Data: aborted connections / clients
+            const
+                series_5_aborted_connections = TimeValueData.prepareSeries(request, series, "app_mysql:aborted_connects"),
+                series_5_aborted_clients = TimeValueData.prepareSeries(request, series, "app_mysql:aborted_clients");
+
+            // The charts
+            chart_1_queries.setSeries(
+                series_1_queries_select,
+                series_1_queries_insert,
+                series_1_queries_update,
+                series_1_queries_delete);
+            chart_1_queries.render();
+
+            chart_2_byte_count.setValueFormatter(humanDataSizePerSecond);
+            chart_2_byte_count.setSeries(
+                series_2_bytes_sent, series_2_bytes_received);
+            chart_2_byte_count.render();
+
+            chart_3_connections.setSeries(
+                series_3_connections);
+            chart_3_connections.render();
+
+            chart_4_slow_queries.setSeries(
+                series_4_slow_queries);
+            chart_4_slow_queries.render();
+
+            chart_5_aborted.setSeries(
+                series_5_aborted_connections, series_5_aborted_clients);
+            chart_5_aborted.render()
+        }
+    };
+
+</script>
+

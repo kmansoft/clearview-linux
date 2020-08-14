@@ -1,0 +1,10 @@
+.idea
+*.out
+node_modules
+package-lock.json
+package/temp-deb
+package/temp-rpm
+package/out/*.deb
+package/out/*.rpm
+package/out/*.tar.gz
+

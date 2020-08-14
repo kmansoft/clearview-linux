@@ -1,0 +1,9 @@
+[Unit]
+Description=Clearview agent, https://clearview.rocks
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/clearview-agent
+
+[Install]
+WantedBy=multi-user.target

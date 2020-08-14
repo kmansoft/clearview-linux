@@ -1,0 +1,609 @@
+<div>
+
+    <div>
+
+        <div id="button-group-list" class="btn-group my-2" role="group" aria-label="Basic example">
+            <button id="button-cpu" type="button" class="btn btn-light">CPU</button>
+            <button id="button-memory" type="button" class="btn btn-light">Memory</button>
+            <button id="button-swap" type="button" class="btn btn-light">Swap</button>
+            <button id="button-load" type="button" class="btn btn-light">Load</button>
+            <button id="button-network" type="button" class="btn btn-light">Network</button>
+        </div>
+
+        <div id="node-item-list" class="d-flex flex-wrap">
+        </div>
+
+        <div id="help-panel" class="d-none">
+            <p><i>Next steps</i>
+            <ol>
+                <li>Add a client node here on this page.</li>
+                <li>Install Clearview <a href="/download.html">agent software</a> on that node.</li>
+                <li>Edit <code>/etc/clearview.conf</code> to specify node id.<br>Click
+                    the "i" for your node above to find out what to set them to.
+                </li>
+                <li>Don't forget to restart the agent afterwards, e.g. <br><code>systemctl
+                        restart clearview-agent</code></li>
+                <li>Start exploring the data by clicking on server name above.</li>
+            </ol>
+        </div>
+
+    </div>
+
+    <div id="node-item-modal-root" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-largeish" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="node-item-modal-title" class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h4>Install the agent</h4>
+                    <ul>
+                        <li>Install <a href="/download.html">Clearview agent</a> on the server.
+                        </li>
+                    </ul>
+                    <h4>Configure</h4>
+                    <ul>
+                        <li>Edit <code>/etc/clearview.conf</code>:
+                            <div>
+                                <code>node_id: <span id="node-item-modal-node-id"></span></code><br>
+                                <code>server_addr: <span id="node-item-modal-server-addr"></span></code><br>
+                                <code>auth_username: <i>value from /etc/clearview-server.conf on the server</i></code><br>
+                                <code>auth_password: <i>value from /etc/clearview-server.conf on the server</i></code>
+                            </div>
+                        </li>
+                        <li>Restart the agent with <code>sudo systemctl restart clearview-agent</code></li>
+                    </ul>
+                    <h4>Rename</h4>
+                    <form>
+                        <div class="form-group">
+                            <input id="node-item-modal-node-rename" class="form-control col-md-6" type="text"
+                                   placeholder="Node name" autofocus>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    <button id="node-item-modal-node-save" type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="node-delete-modal-root" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="node-item-modal-title" class="modal-title">Delete a node</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure about deleting <i><span id="node-delete-modal-title"></span></i>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    <button id="node-delete-modal-confirm" type="button" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="demo-mode-modal-root" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-largeish" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Demo Mode</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    This feature is disabled in demo mode
+            </div>
+        </div>
+    </div>
+
+    <template id="node-item-template">
+        <div class="card mr-2 mb-2 muk-card-selectable">
+            <div class="card-body">
+                <div id="node-item-title" class="h4 muk-card-node-title">Title</div>
+                <div id="node-item-icons" class="float-right">
+                    <img id="node-item-info" class="card-icon-action"
+                         src="icon-info-24px.svg">
+                    <img id="node-item-delete" class="card-icon-action"
+                         src="icon-delete-24px.svg">
+                </div>
+                <div id="node-item-add">
+                    <img class="card-icon-add" src="icon-add_box-24px.svg">
+                </div>
+                <svg id="node-item-svg" width="110" height="110" class="mt-2 node-item-chart"></svg>
+            </div>
+        </div>
+    </template>
+
+</div>
+
+<script type="text/javascript">
+    'use strict';
+
+    const BUTTONS_AND_CHARTS = [
+        {
+            selected_id: "button-cpu",
+            color_fill: "#BBDEFB",
+            color_stroke: "#2196F3",
+            scale: 800.0,
+            is_log: true,
+            get_value: (item) => {
+                return item.value_cpu;
+            },
+            format_value: (value) => {
+                return value.toFixed(1) + "%";
+            },
+        }, {
+            selected_id: "button-memory",
+            color_fill: "#D1C4E9",
+            color_stroke: "#673AB7",
+            scale: 100.0,
+            get_value: (item) => {
+                return item.value_memory;
+            },
+            format_value: (value) => {
+                return value.toFixed(1) + "%";
+            },
+        }, {
+            selected_id: "button-swap",
+            color_fill: "#FFCDD2",
+            color_stroke: "#F44336",
+            scale: 100.0,
+            get_value: (item) => {
+                return item.value_swap
+            },
+            format_value: (value) => {
+                return value.toFixed(1) + "%";
+            },
+        }, {
+            selected_id: "button-load",
+            color_fill: "#FFF9C4",
+            color_stroke: "#FFEB3B",
+            scale: 40,
+            is_log: true,
+            get_value: (item) => {
+                return item.value_load
+            },
+            format_value: (value) => {
+                return value.toFixed(2);
+            },
+        }, {
+            selected_id: "button-network",
+            color_fill: "#C8E6C9",
+            color_stroke: "#4CAF50",
+            scale: 1024 * 1024 * 1024,
+            is_log: true,
+            get_value: (item) => {
+                return item.value_network
+            },
+            format_value: (value) => {
+                return humanDataSizePerSecond(value)
+            },
+        }
+    ];
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(node, refs, minutes) {
+            console.log("***** Mounted charts-nodes.html", name);
+
+            this.refs = refs;
+            this.minutes = minutes;
+            this.saved_data = null;
+
+            this.button_group = new ButtonGroup("button-group-list", (e) => {
+                const id = e.target.id;
+                if (window.localStorage) {
+                    window.localStorage.setItem("selected_id", id)
+                }
+                this.onSetSelectedButtonId(id)
+            }, window.localStorage && window.localStorage.getItem("selected_id"));
+
+            this.loadData(minutes);
+        },
+        onRefresh(minutes) {
+            this.loadData();
+        },
+        onTimePeriod(minutes) {
+            this.minutes = minutes;
+            this.loadData(minutes);
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-nodes.html", name);
+        },
+        loadData(minutes, use_url, use_req) {
+            const url = use_url || ('/cv/api/v1/index');
+            const req = use_req || {};
+
+            Object.assign(req, makeRequestFromMinutes(minutes));
+
+            http.post(url, req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && response.data.node_list && this.$isMounted) {
+                        this.loadDataDone(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        loadDataDone(data) {
+            const list = data.node_list;
+            if (!list) {
+                return
+            }
+
+            const elHelpPanel = document.getElementById("help-panel");
+            if (list && list.length <= 1) {
+                elHelpPanel.classList.remove("d-none");
+            } else {
+                elHelpPanel.classList.add("d-none");
+            }
+
+            for (let i of list) {
+                i.is_add = false;
+            }
+            list.push({is_add: true});
+
+            this.saved_data = data;
+            this.demo_mode = data.demo_mode;
+
+            console.log("Demo mode: " + this.demo_mode)
+
+            this.sortNodeList();
+            this.renderNodeList();
+
+            if (data.new_node_id) {
+                this.showNodeModal(data.new_node_id);
+            }
+
+            console.log("loadDataDone, data =", data);
+
+        },
+        computeEnd(curr, value) {
+            if (value <= 0.0) {
+                return 0.0
+            } else if (value >= curr.scale) {
+                return 1.0
+            } else if (curr.is_log) {
+                return Math.log(value + 1) / Math.log(curr.scale + 1)
+            } else {
+                return value / curr.scale
+            }
+        },
+        onClickNodeInfo(data) {
+            console.info("onClickNodeInfo", this, data)
+            this.showNodeModalImpl(data)
+        },
+        onClickNodeSave(data, el_root, el_title, el_node_input) {
+            console.info("onClickNodeSave", data);
+
+            if (this.demo_mode) {
+                return
+            }
+
+            const title = el_node_input.value.trim();
+
+            if (title) {
+                const req = {
+                    node_id: data.node_id,
+                    node_title: title
+                };
+                http.post('/cv/api/v1/setnodetitle', req)
+                    .then((response) => {
+                        console.log('get response', response);
+
+                        if (response.data && response.data && this.$isMounted) {
+                            el_root.modal("hide");
+
+                            data.node_title = title;
+                            el_title.innerText = title;
+
+                            this.loadDataDone(response.data)
+                        }
+                    })
+                    .catch((error) => {
+                        console.log('get request error', error)
+                    })
+                    .then(() => {
+                        console.log('get request is done')
+                    })
+            }
+        },
+        onClickNodeDelete(data) {
+            console.info("onClickNodeDelete", data);
+
+            if (this.demo_mode) {
+                this.showDemoModeModal()
+                return
+            }
+
+            const elRoot = $('#node-delete-modal-root');
+
+            const elNodeTitle = document.getElementById("node-delete-modal-title");
+            elNodeTitle.innerText = data.node_title;
+
+            const elNodeConfirm = document.getElementById("node-delete-modal-confirm");
+            elNodeConfirm.onclick = (e) => {
+                console.log("Confirmed");
+                elRoot.modal("hide");
+                this.loadData(this.minutes, '/cv/api/v1/deletenode',
+                    {node_id: data.node_id})
+            };
+
+            elRoot.modal();
+        },
+        onClickNodeAdd() {
+            console.info("onClickNodeAdd");
+
+            if (this.demo_mode && this.saved_data && this.saved_data.node_list) {
+                if (this.saved_data.node_list.length > 1) {
+                    this.showDemoModeModal()
+                    return
+                }
+            }
+
+            this.loadData(this.minutes, '/cv/api/v1/createnode')
+        },
+        onClickNodeView(node_id) {
+            console.info("onClickNodeView", node_id);
+
+            NODE_ID = node_id;
+
+            const slug = "overview";
+            window.location.hash = "#" + encodeURI("slug=" + encodeURIComponent(slug) +
+                "&node=" + encodeURIComponent(NODE_ID));
+            // window.location.search = "?" + encodeURI("slug=" + encodeURIComponent(slug) +
+            // "&node=" + encodeURIComponent(NODE_ID);
+
+            spa.loadPage("./charts-overview.html");
+            nav.setIsActive("charts-overview.html");
+            nav.setLimit(-1);
+        },
+        showNodeModal(node_id) {
+            if (this.saved_data) {
+                for (let data of this.saved_data.node_list) {
+                    if (data.node_id === node_id) {
+                        this.showNodeModalImpl(data);
+                        break
+                    }
+                }
+            }
+        },
+        showNodeModalImpl(data) {
+            console.log("showNodeModalImpl", data);
+
+            const elRoot = $("#node-item-modal-root");
+
+            const elTitle = document.getElementById("node-item-modal-title");
+            elTitle.innerText = data.node_title;
+
+            const elServerAddr = document.getElementById("node-item-modal-server-addr");
+            const url = new URL(window.location)
+            elServerAddr.innerText = url.host
+
+            const elNodeId = document.getElementById("node-item-modal-node-id");
+            elNodeId.innerText = data.node_id;
+
+            const elRenameInput = document.getElementById("node-item-modal-node-rename");
+            elRenameInput.value = data.node_title;
+
+            const elRenameSave = document.getElementById("node-item-modal-node-save");
+            elRenameSave.onclick = () => {
+                console.log("Confirmed");
+                elRoot.modal("hide");
+                this.onClickNodeSave(data, elRoot, elTitle, elRenameInput);
+            };
+
+            elRoot.on('shown.bs.modal', function () {
+                $(elRenameInput).trigger('focus')
+            });
+            elRoot.modal();
+        },
+        showDemoModeModal() {
+            console.log("showDemoModeModal");
+
+            const elRoot = $("#demo-mode-modal-root");
+            elRoot.modal();
+        },
+        sortNodeList() {
+            const list = this.saved_data.node_list;
+            const len = list.length;
+            let addLast = null;
+            if (len > 0) {
+                addLast = list[len - 1];
+                if (addLast.is_add) {
+                    list.splice(len - 1, 1)
+                } else {
+                    addLast = null
+                }
+            }
+
+            list.sort((a, b) => {
+                const na = a.node_title;
+                const nb = b.node_title;
+                if (na < nb) {
+                    return -1
+                } else if (na > nb) {
+                    return 1
+                } else {
+                    return 0;
+                }
+            });
+
+            if (addLast) {
+                list.push(addLast)
+            }
+
+            console.log("sortNodeList", list)
+        },
+        renderNodeList() {
+            console.log("renderNodeList");
+
+            for (let i of this.saved_data.node_list) {
+                i.key = i.node_id;
+            }
+
+            const curr = BUTTONS_AND_CHARTS.find((selector) => selector.selected_id === this.button_group.selected_id);
+            const sync = new HtmlSync("node-item-list", "node-item-template");
+            sync.syncWithData(this.saved_data.node_list, null, (node, data) => {
+
+                const cell1 = node.dataCell1 || node.querySelectorAll("#node-item-title")[0];
+                cell1.id = "";
+                node.dataCell1 = cell1;
+
+                const cell2 = node.dataCell2 || node.querySelectorAll("#node-item-svg")[0];
+                cell2.id = "";
+                node.dataCell2 = cell2;
+
+                const cell3 = node.dataCell3 || node.querySelectorAll("#node-item-icons")[0];
+                cell3.id = "";
+                node.dataCell3 = cell3;
+
+                const cell4 = node.dataCell4 || node.querySelectorAll("#node-item-add")[0];
+                cell4.id = "";
+                node.dataCell4 = cell4;
+
+                const icon1 = node.dataIcon1 || node.querySelectorAll("#node-item-info")[0];
+                icon1.id = "";
+                node.dataIcon1 = icon1;
+
+                const icon2 = node.dataIcon2 || node.querySelectorAll("#node-item-delete")[0];
+                icon2.id = "";
+                node.dataIcon2 = icon2;
+
+                if (data.is_add) {
+                    cell2.style.visibility = "hidden";
+                    cell3.style.display = "none";
+                    cell4.style.display = "flex";
+
+                    cell1.innerText = "Add a node";
+                    node.onclick = () => {
+                        this.onClickNodeAdd();
+                    }
+                } else {
+                    cell2.style.visibility = "visible";
+                    cell3.style.display = "flex";
+                    cell4.style.display = "none";
+
+                    cell1.innerText = data.node_title;
+                    icon1.onclick = (e) => {
+                        e.stopPropagation();
+                        this.onClickNodeInfo(data);
+                    };
+                    icon2.onclick = (e) => {
+                        e.stopPropagation();
+                        this.onClickNodeDelete(data);
+                    };
+                    node.onclick = (e) => {
+                        this.onClickNodeView(data.node_id);
+                    };
+
+                    // Clear the SVG
+                    while (cell2.firstChild) {
+                        cell2.firstChild.remove()
+                    }
+
+                    // Value as text
+                    const value = curr.get_value(data);
+                    const formatted = value == null ? "" : curr.format_value(value);
+
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+                    text.setAttribute("x", 55 + 2);
+                    text.setAttribute("y", 55 + 6);
+                    text.setAttribute("fill", "#303030");
+                    text.setAttribute("text-anchor", "middle");
+                    text.classList.add("value");
+
+                    text.appendChild(document.createTextNode(formatted));
+                    cell2.appendChild(text);
+
+                    // Circle (background) and arc (value)
+                    const polarToCartesian = function (centerX, centerY, radius, angle) {
+                        return {
+                            x: centerX + radius * Math.cos(angle),
+                            y: centerY + radius * Math.sin(angle)
+                        };
+                    }
+
+                    const describeArc = function (x, y, radius, startAngle, endAngle) {
+                        var start = polarToCartesian(x, y, radius, endAngle);
+                        var end = polarToCartesian(x, y, radius, startAngle);
+
+                        var largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+
+                        return [
+                            "M", roundValue(start.x), roundValue(start.y),
+                            "A", radius, radius, 0, largeArcFlag, 0, roundValue(end.x), roundValue(end.y)
+                        ].join(" ");
+                    }
+
+                    const arc1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+                    arc1.setAttribute("fill", "none");
+                    arc1.setAttribute("stroke", curr.color_fill);
+                    arc1.setAttribute("stroke-width", 10);
+                    arc1.setAttribute("cx", 55)
+                    arc1.setAttribute("cy", 55)
+                    arc1.setAttribute("r", 50)
+
+                    cell2.appendChild(arc1);
+
+                    if (value > 0) {
+                        const start = -Math.PI / 2;
+                        const end = start + Math.PI * 2 * this.computeEnd(curr, value);
+
+                        const arc2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+                        arc2.setAttribute("fill", "none");
+                        arc2.setAttribute("stroke", curr.color_stroke);
+                        arc2.setAttribute("stroke-width", 10);
+                        arc2.setAttribute("d", describeArc(55, 55, 50, start, end));
+
+                        cell2.appendChild(arc2);
+                    }
+                }
+
+            }, true);
+        },
+        removeAllChildren(el) {
+            while (el.firstChild) {
+                el.removeChild(el.firstChild)
+            }
+        }, addTextNode(el, text) {
+            const div = document.createElement("div");
+            el.appendChild(div);
+            div.innerText = text
+        },
+        onSetSelectedButtonId(id) {
+            this.button_group.setSelectedId(id);
+            this.renderNodeList()
+        }
+    };
+
+</script>

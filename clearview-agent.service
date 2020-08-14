@@ -1,0 +1,11 @@
+[Unit]
+Description=Clearview Agent
+After=network.target
+Requires=clearview-server.service
+
+[Service]
+WorkingDirectory=/var/www/bin
+ExecStart=/var/www/bin/clearview-agent.out -i -s 127.0.0.1 -p 63001 -f /etc/clearview.conf
+
+[Install]
+WantedBy=multi-user.target

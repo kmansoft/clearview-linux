@@ -1,0 +1,21 @@
+[Unit]
+Description=Clearview Server
+After=network.target
+Requires=influxdb.service
+Requires=mongod.service
+
+[Service]
+WorkingDirectory=/var/www/bin
+User=clearview
+Group=clearview
+ExecStart=/var/www/bin/clearview-server.out \
+    -rootdir /var/www/html/ \
+    -cvdir /var/www/html/cv/ \
+    -p 63001 \
+    -influx-db-name clearview \
+    -mongo-db-name clearview \
+    -demo \
+    -f /etc/clearview-server.conf
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,194 @@
+<!doctype html>
+
+<div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-1-requests" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-2-connections" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-3-workers" class="chart-large"></svg>
+        </span>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    'use strict';
+
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-nginx.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            // Chart 1: request count
+            let chart_1_requests = new TimeValueChart(document.getElementById('chart-1-requests'));
+            chart_1_requests.setSize(740, 260);
+            chart_1_requests.setChartTitle("Requests");
+            chart_1_requests.setCallbacks(host);
+            chart_1_requests.setDataOptions([
+                {
+                    name: 'requests',
+                    fill: '#E6EE9Cc0', line: '#CDDC39'
+                },
+            ]);
+            this.chart_1_requests = chart_1_requests;
+
+            // Chart 2: request bytes
+            let chart_2_connections = new TimeValueChart(document.getElementById('chart-2-connections'));
+            chart_2_connections.setSize(740, 260);
+            chart_2_connections.setChartTitle("Connections");
+            chart_2_connections.setCallbacks(host);
+            chart_2_connections.setDataOptions([
+                {
+                    name: 'accepted',
+                    fill: '#B0BEC5a0', line: '#607D8B'
+                },
+                {
+                    name: 'handled',
+                    fill: '#90A4AEa0', line: '#607D8B'
+                }
+            ]);
+            this.chart_2_connections = chart_2_connections;
+
+            // Chart 3: workers
+            let chart_3_workers = new TimeValueChart(document.getElementById('chart-3-workers'));
+            chart_3_workers.setChartTitle("Workers");
+            chart_3_workers.setSize(740, 260);
+            chart_3_workers.setCallbacks(host);
+            chart_3_workers.setDataOptions([
+                {
+                    name: 'waiting',
+                    fill: '#D1C4E9c0', line: '#9C27B0'
+                },
+                {
+                    name: 'reading',
+                    fill: '#CE93D8c0', line: '#9C27B0'
+                },
+                {
+                    name: 'writing',
+                    fill: '#BA68C8c0', line: '#9C27B0'
+                },
+            ]);
+            this.chart_3_workers = chart_3_workers;
+
+            this.loadData();
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-nginx.html", name);
+
+            this.chart_1_requests = null;
+            this.chart_2_connections = null;
+            this.chart_3_workers = null;
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/app_nginx', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data) {
+                        this.onDataLoaded(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(data) {
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_requests = this.chart_1_requests;
+            const chart_2_connections = this.chart_2_connections;
+            const chart_3_workers = this.chart_3_workers;
+
+            // The data
+            if (request == null || series == null) {
+                chart_1_requests.setSeries(null);
+                chart_1_requests.render();
+
+                chart_2_connections.setSeries(null);
+                chart_2_connections.render();
+
+                chart_3_workers.setSeries(null);
+                chart_3_workers.render();
+
+                return;
+            }
+
+            // Data: request count
+            const series_1_requests = TimeValueData.prepareSeries(request, series, "app_nginx:access");
+
+            // Data: connections
+            const
+                series_2_connections_accepted = TimeValueData.prepareSeries(request, series, "app_nginx:accepted"),
+                series_2_connections_handled = TimeValueData.prepareSeries(request, series, "app_nginx:handled");
+
+            // Data: workers
+            const
+                series_3_workers_waiting = TimeValueData.prepareSeries(request, series, "app_nginx:workers_waiting"),
+                series_3_workers_reading = TimeValueData.prepareSeries(request, series, "app_nginx:workers_reading"),
+                series_3_workers_writing = TimeValueData.prepareSeries(request, series, "app_nginx:workers_writing");
+
+            // The charts
+
+            chart_1_requests.setSeries(
+                series_1_requests);
+            chart_1_requests.render();
+
+            chart_2_connections.setSeries(
+                series_2_connections_accepted, series_2_connections_handled);
+            chart_2_connections.render();
+
+            chart_3_workers.setSeries(
+                series_3_workers_waiting, series_3_workers_reading, series_3_workers_writing);
+            chart_3_workers.render()
+        }
+    };
+
+
+</script>
+
+

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<div>
+    <div>
+        <span class="timechart">
+            <svg id="chart-1-net" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div>
+         <span class="timechart">
+            <svg id="chart-2-ip4" class="chart-large"></svg>
+        </span>
+    </div>
+
+    <div>
+        <span class="timechart">
+            <svg id="chart-3-ip6" class="chart-large"></svg>
+        </span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    'use strict';
+    const COMPONENT = {
+        onCreated() {
+            this.http = axios.create({
+                headers: {
+                    common: {
+                        Accept: 'application/json'
+                    }
+                },
+                timeout: 15 * 1000
+            });
+        },
+        onMounted(host, node, refs, end_time, minutes) {
+            console.log("***** Mounted charts-network.html", name);
+
+            this.host = host;
+            this.refs = refs;
+            this.end_time = end_time;
+            this.minutes = minutes;
+
+            // Chart 1: network tx/rx
+            let chart_1_net = new TimeValueChart(document.getElementById('chart-1-net'));
+            chart_1_net.setChartTitle("Network");
+            chart_1_net.setSize(740, 260);
+            chart_1_net.setCallbacks(host);
+            chart_1_net.setDataOptions([
+                {
+                    name: 'rx',
+                    fill: '#A5D6A7c0', line: '#4CAF50'
+                },
+                {
+                    name: 'tx',
+                    fill: '#81C784c0', line: '#4CAF50'
+                },
+            ]);
+            this.chart_1_net = chart_1_net;
+
+            // Chart 2: IPv4 tx/rx
+            let chart_2_ip4 = new TimeValueChart(document.getElementById('chart-2-ip4'));
+            chart_2_ip4.setChartTitle("IP v4");
+            chart_2_ip4.setSize(740, 260);
+            chart_2_ip4.setCallbacks(host);
+            chart_2_ip4.setDataOptions([
+                {
+                    name: 'rx 4',
+                    fill: '#BBDEFBc0', line: '#2196F3'
+                },
+                {
+                    name: 'tx 4',
+                    fill: '#64B5F6c0', line: '#2196F3'
+                },
+            ]);
+            this.chart_2_ip4 = chart_2_ip4;
+
+            // Chart 3: IPv6 rx/tx
+            let chart_3_ip6 = new TimeValueChart(document.getElementById('chart-3-ip6'));
+            chart_3_ip6.setChartTitle("IP v6");
+            chart_3_ip6.setSize(740, 260);
+            chart_3_ip6.setCallbacks(host);
+            chart_3_ip6.setDataOptions([
+                {
+                    name: 'rx 6',
+                    fill: '#BBDEFBc0', line: '#2196F3'
+                },
+                {
+                    name: 'tx 6',
+                    fill: '#64B5F6c0', line: '#2196F3'
+                },
+            ]);
+            this.chart_3_ip6 = chart_3_ip6;
+
+            this.loadData();
+        },
+        onRefresh(end_time, minutes) {
+            this.end_time = end_time;
+            this.minutes = minutes;
+            this.loadData();
+        },
+        onUnmounted() {
+            console.log("***** Unmounted charts-network.html", name);
+
+            this.chart_1_net = null;
+            this.chart_2_ip4 = null;
+            this.chart_3_ip6 = null;
+        },
+        loadData() {
+            const req = {
+                node_id: NODE_ID,
+                series: ['net'],
+                end_time: this.end_time,
+                point_count: 30,
+                point_duration: 60
+            };
+
+            Object.assign(req, makeRequestFromMinutes(this.minutes));
+
+            http.post('/cv/api/v1/get', req)
+                .then((response) => {
+                    console.log('get response', response);
+
+                    if (response.data && this.$isMounted) {
+                        this.onDataLoaded(response.data)
+                    }
+                })
+                .catch((error) => {
+                    console.log('get request error', error)
+                })
+                .then(() => {
+                    console.log('get request is done')
+                })
+        },
+        onDataLoaded(data) {
+            console.log('onDataLoaded');
+
+            // Request and series
+            const request = data.request;
+            const series = data.series;
+
+            // The charts
+            const chart_1_net = this.chart_1_net;
+            const chart_2_ip4 = this.chart_2_ip4;
+            const chart_3_ip6 = this.chart_3_ip6;
+
+            // The data
+            if (request == null || series == null) {
+                chart_1_net.setSeries(null);
+                chart_1_net.render();
+
+                chart_2_ip4.setSeries(null);
+                chart_2_ip4.render();
+
+                chart_3_ip6.setSeries(null);
+                chart_3_ip6.render();
+
+                return;
+            }
+
+            // Data: network tx/rx
+            const
+                series_net_rx = TimeValueData.prepareSeries(request, series, "net:rx"),
+                series_net_tx = TimeValueData.prepareSeries(request, series, "net:tx");
+
+            // Data: IP v4 tx/rx
+            const
+                series_net_rx4 = TimeValueData.prepareSeries(request, series, "net:rx_4"),
+                series_net_tx4 = TimeValueData.prepareSeries(request, series, "net:tx_4");
+
+            // Data: IP v6 tx/rx
+            const
+                series_net_rx6 = TimeValueData.prepareSeries(request, series, "net:rx_6"),
+                series_net_tx6 = TimeValueData.prepareSeries(request, series, "net:tx_6");
+
+            // The charts
+            chart_1_net.setValueFormatter(humanDataSizePerSecond);
+            chart_1_net.setSeries(
+                series_net_rx, series_net_tx);
+            chart_1_net.render();
+
+            chart_2_ip4.setValueFormatter(humanDataSizePerSecond);
+            chart_2_ip4.setSeries(
+                series_net_rx4, series_net_tx4);
+            chart_2_ip4.render();
+
+            chart_3_ip6.setValueFormatter(humanDataSizePerSecond);
+            chart_3_ip6.setSeries(
+                series_net_rx6, series_net_tx6);
+            chart_3_ip6.render()
+        }
+    };
+
+</script>
