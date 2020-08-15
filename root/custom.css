@@ -11,6 +11,7 @@ h1, h2, h3, h4 {
     background-size: 0 1px;
     transition: background-size .3s;
 }
+
 .container a:hover {
     background-size: 100% 1px;
 }
