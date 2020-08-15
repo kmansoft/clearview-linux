@@ -1,5 +1,6 @@
 h1, h2, h3, h4 {
-    margin-bottom: 1em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 .container a {
