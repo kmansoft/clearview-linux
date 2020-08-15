@@ -20,7 +20,7 @@
           rel="stylesheet">
     <!-- Our css -->
     <link rel="stylesheet" href="custom.css">
-    <title>Clearview download</title>
+    <title>ClearView download</title>
 </head>
 <body>
 
@@ -52,8 +52,8 @@
     <!-- Agent -->
     <h3>Agent downloads</h3>
 
-    <div>
-        <h4>For Debian, Ubuntu</h4>
+    <h4>For Debian, Ubuntu</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">AMD64 (Intel 64-bit)</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-agent_0.2.0-5_amd64.deb">
@@ -75,8 +75,10 @@
                 and install with <code>sudo dpkg -i &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>For Fedora, CentOS, SuSE</h4>
+    <h4>For Fedora, CentOS, SuSE</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">x86_64 (Intel 64-bit)</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-agent-0.2.0-5.x86_64.rpm">
@@ -98,8 +100,10 @@
                 and install with <code>sudo rpm -Uhv &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>For any Linux distro</h4>
+    <h4>For any Linux distro</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">Intel 64-bit</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-agent_0.2.0-5_amd64.tar.gz">
@@ -121,17 +125,18 @@
                 and extract with <code>sudo tar -C / -xvf &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>Post-installation configuration</h4>
+    <h4>Post-installation configuration</h4>
 
-        <p>Please edit <code>/etc/clearview.conf</code> to provide:
-        <ul>
-            <li>ClearView server address as <code>server_addr</code></li>
-            <li>The username and the password from <code>/etc/clearview-server.conf</code> on the ClearView server</li>
-            <li>This machine's node id (should be created in ClearView server web UI) as <code>node_id</code></li>
-        </ul>
+    <p>Please edit <code>/etc/clearview.conf</code> to provide:
+    <ul>
+        <li>ClearView server address as <code>server_addr</code></li>
+        <li>The username and the password from <code>/etc/clearview-server.conf</code> on the ClearView server</li>
+        <li>This machine's node id (should be created in ClearView server web UI) as <code>node_id</code></li>
+    </ul>
 
-        <pre>
+    <pre>
 server_addr: 111.222.33.44
 auth_username: monitoring_with_clearview
 auth_password: !s_ea6y_and_7un
@@ -139,14 +144,13 @@ node_id: 19edcd32-abcd-1234-9664-16e11a5aa90f
 mysql_username: whatever_it_is
 mysql_password: the_password_goes_here</pre>
 
-        <p>Finally, enable the agent service with <code>sudo systemctl enable clearview-agent</code>
-            and make sure it's started with <code>sudo systemctl restart clearview-agent</code>.</p>
-    </div>
+    <p>Finally, enable the agent service with <code>sudo systemctl enable clearview-agent</code>
+        and make sure it's started with <code>sudo systemctl restart clearview-agent</code>.</p>
 
     <h3>Server downloads</h3>
 
-    <div>
-        <h4>For Debian, Ubuntu</h4>
+    <h4>For Debian, Ubuntu</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">AMD64 (Intel 64-bit)</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-server_0.2.0-5_amd64.deb">
@@ -168,8 +172,10 @@ mysql_password: the_password_goes_here</pre>
                 and install with <code>sudo dpkg -i &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>For Fedora, CentOS, SuSE</h4>
+    <h4>For Fedora, CentOS, SuSE</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">x86_64 (Intel 64-bit)</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-server-0.2.0-5.x86_64.rpm">
@@ -191,8 +197,10 @@ mysql_password: the_password_goes_here</pre>
                 and install with <code>sudo rpm -Uhv &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>For any Linux distro</h4>
+    <h4>For any Linux distro</h4>
+    <div class="container">
         <div class="row">
             <div class="col-sm-4 p-1">Intel 64-bit</div>
             <div class="col-sm-8 p-1"><a href="/download/clearview-server_0.2.0-5_amd64.tar.gz">
@@ -214,19 +222,19 @@ mysql_password: the_password_goes_here</pre>
                 and extract with <code>sudo tar -C / -xvf &lt;the_file&gt;</code>
             </div>
         </div>
+    </div>
 
-        <h4>Post-installation configuration</h4>
+    <h4>Post-installation configuration</h4>
 
-        <p>Please edit <code>/etc/clearview-server.conf</code> to provide the username and the password
-            for agent authentication</p>
+    <p>Please edit <code>/etc/clearview-server.conf</code> to provide the username and the password
+        for agent authentication</p>
 
-        <pre>
+    <pre>
 auth_username: monitoring_with_clearview
 auth_password: !s_ea6y_and_7un</pre>
 
-        <p>Finally, enable the server service with <code>sudo systemctl enable clearview-server</code>
-            and make sure it's started with <code>sudo systemctl restart clearview-server</code>.</p>
-    </div>
+    <p>Finally, enable the server service with <code>sudo systemctl enable clearview-server</code>
+        and make sure it's started with <code>sudo systemctl restart clearview-server</code>.</p>
 
     <h3>All files</h3>
 
