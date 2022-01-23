@@ -28,7 +28,7 @@ const (
 	DEFAULT_VERBOSE          = false
 	DEFAULT_SLEEP            = 60
 	DEFAULT_HTTP_ROOT_DIR    = ""
-	DEFAULT_HTTP_CV_DIR      = "/var/lib/clearview/site/cv"
+	DEFAULT_HTTP_CV_DIR      = "/var/lib/clearview-server/site/cv"
 	DEFAULT_CONFIG_FILE_NAME = "/etc/clearview-server.conf"
 )
 
