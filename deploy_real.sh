@@ -7,13 +7,13 @@ echo "*** Building ..."
 
 if ! go build -o "${OUTPATH}/clearview-server.out" ./server/*.go
 then
-   	echo "*** Error"
+   	echo "*** Error building clearview-server.out"
 	exit 1
 fi
 
 if ! go build -o "${OUTPATH}/clearview-agent.out" ./agent/*.go
 then
-   	echo "*** Error"
+   	echo "*** Error building clearview-agent.out"
 	exit 1
 fi
 
@@ -24,7 +24,7 @@ if ! rsync -acvz \
     "${OUTPATH}/clearview-agent.out" \
     "kman@${SERVER}:/var/www/bin/"
 then
-	echo "*** Error"
+	echo "*** Error syncing /var/www/bin/"
 	exit 1
 fi
 
@@ -32,7 +32,7 @@ if ! rsync -acvz \
     ./root/ \
     "kman@${SERVER}:/var/www/html/"
 then
-	echo "*** Error"
+	echo "*** Error syncing /var/www/html/"
 	exit 1
 fi
 
@@ -40,7 +40,7 @@ if ! rsync -acvz \
     ./cv/ \
     "kman@${SERVER}:/var/www/html/cv"
 then
-	echo "*** Error"
+	echo "*** Error syncing /var/www/html/cv"
 	exit 1
 fi
 
@@ -49,9 +49,18 @@ if ! rsync -acvz \
     clearview-agent.service \
     "root@${SERVER}:/etc/systemd/system"
 then
-	echo "*** Error"
+	echo "*** Error syncing /etc/systemd/system"
 	exit 1
 fi
+
+if ! rsync -acvz \
+    ./package/out/ \
+    "kman@${SERVER}:/var/www/download"
+then
+	echo "*** Error syncing /var/www/download"
+	exit 1
+fi
+
 
 echo "*** Restarting ..."
 

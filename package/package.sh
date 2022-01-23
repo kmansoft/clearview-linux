@@ -4,20 +4,27 @@ OPT_ALLARCH=0
 OPT_HTML=1
 OPT_UPLOAD=0
 
+ARCH_LIST="amd64"
+WHAT_LIST=""
+
 while [[ "$#" -gt 0 ]]; do case $1 in
 	-a|--allarch) OPT_ALLARCH=1;;
-  -h|--html) OPT_HTML=0;;
+  -h|--html) OPT_HTML=1;;
 	-u|--upload) OPT_UPLOAD=1;;
-	*) echo "Unknown parameter passed: $1"; exit 1;;
+	*) WHAT_LIST="${WHAT_LIST} $1";;
 esac; shift; done
 
-ARCH_LIST="amd64"
-WHAT_LIST="agent server"
+if [[ -z "${WHAT_LIST}" ]]
+then
+    WHAT_LIST="agent server"
+fi
 
 if [[ $OPT_ALLARCH -gt 0 ]]
 then
     ARCH_LIST="386 amd64 arm64 arm"
 fi
+
+echo "Building: ${WHAT_LIST}"
 
 ##### Directories
 
@@ -89,6 +96,8 @@ do
             echo "*** Build error"
             exit 1
         fi
+
+        # Build .deb
 
         ls -lh "${TEMPDIR_DEB}/${WHAT}/usr/sbin/${OUT_EXE}"
         file "${TEMPDIR_DEB}/${WHAT}/usr/sbin/${OUT_EXE}"
@@ -306,10 +315,18 @@ then
   SERVER="clearview.rocks"
 
   if ! rsync -acvz \
+      ./root/ \
+      "kman@${SERVER}:/var/www/html/"
+  then
+    echo "*** Error syncing /var/www/html/"
+    exit 1
+  fi
+
+  if ! rsync -acvz \
       "$OUTDIR/" \
       "kman@${SERVER}:/var/www/download/"
   then
-    echo "*** Error"
+    echo "*** Error syncing /var/www/download/"
     exit 1
   fi
 fi
