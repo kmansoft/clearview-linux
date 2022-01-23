@@ -117,8 +117,9 @@ do
         echo "Architecture: $DEB_ARCH" >> "${TEMPDIR_DEB}/${WHAT}/control"
         cat "${PACKDIR}/${WHAT}/deb/control" >> "${TEMPDIR_DEB}/${WHAT}/control"
 
-        # Copy postinst and postrm
+        # Copy pre/post scripts
 
+        cp "${PACKDIR}/${WHAT}/deb/preinst" "${TEMPDIR_DEB}/${WHAT}/preinst"
         cp "${PACKDIR}/${WHAT}/deb/postinst" "${TEMPDIR_DEB}/${WHAT}/postinst"
         cp "${PACKDIR}/${WHAT}/deb/postrm" "${TEMPDIR_DEB}/${WHAT}/postrm"
 
@@ -134,13 +135,13 @@ do
 
                 cp "${PACKDIR}/${WHAT}/clearview-server.conf" "${TEMPDIR_DEB}/${WHAT}/etc/"
                 cp "${SRCDIR}/cv/web/"* "${TEMPDIR_DEB}/${WHAT}/var/lib/clearview-server/site/cv/web/"
-                cp "${PACKDIR}/${WHAT}/deb/conffile" "${TEMPDIR_DEB}/${WHAT}/conffile"
+                cp "${PACKDIR}/${WHAT}/deb/conffiles" "${TEMPDIR_DEB}/${WHAT}/conffiles"
            ;;
             agent)
                 DIR_LIST="./usr/sbin ./usr/lib/systemd/system ./etc"
 
                 cp "${PACKDIR}/${WHAT}/clearview.conf" "${TEMPDIR_DEB}/${WHAT}/etc/"
-                cp "${PACKDIR}/${WHAT}/deb/conffile" "${TEMPDIR_DEB}/${WHAT}/conffile"
+                cp "${PACKDIR}/${WHAT}/deb/conffiles" "${TEMPDIR_DEB}/${WHAT}/conffiles"
             ;;
             *) echo "Unknown software 'what' kind"
             exit 1
@@ -159,8 +160,8 @@ do
             # Archive control
 
             chmod 644 control md5sums
-            chmod 755 postrm postinst
-            fakeroot -- tar -cz -f ./control.tar.gz ./control ./md5sums ./postinst ./postrm
+            chmod 755 preinst postrm postinst
+            fakeroot -- tar -cz -f ./control.tar.gz ./control ./md5sums ./preinst ./postinst ./postrm
 
             # Archive data
 
