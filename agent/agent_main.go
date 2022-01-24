@@ -63,10 +63,11 @@ func (f *Flags) makeServerUrl(confServerAddr string) url.URL {
 	u.Host = server
 
 	if u.Port() == "" {
-		if f.insecure || f.port != 443 {
+		if !f.insecure && f.port != 443 {
 			u.Host += ":" + strconv.Itoa(f.port)
 		}
 	}
+
 	return u
 }
 
@@ -91,6 +92,7 @@ func main() {
 	}
 
 	configServerAddr := config.GetOrDefault("server_addr", "")
+	flags.insecure = flags.insecure || config.GetBoolean("insecure", false)
 
 	serverUrl := flags.makeServerUrl(configServerAddr)
 	fmt.Printf("Server url: %s\n", serverUrl.String())
