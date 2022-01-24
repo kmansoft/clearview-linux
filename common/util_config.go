@@ -2,7 +2,6 @@ package common
 
 import (
 	"io/ioutil"
-	"regexp"
 	"strings"
 )
 
@@ -59,16 +58,25 @@ func (c *Config) GetError() error {
 }
 
 func (c *Config) readConfigFileImpl(data []byte) {
-	expr := regexp.MustCompile(`^\s*([a-zA-Z_]+):?\s+(\S+)\s*$`)
-
 	for _, l := range strings.Split(string(data), "\n") {
-		if strings.HasPrefix(strings.TrimSpace(l), "#") {
+		t := strings.TrimSpace(l)
+
+		if t == "" || strings.HasPrefix(t, "#") {
 			continue
 		}
 
-		if m := expr.FindStringSubmatch(l); len(m) == 3 {
-			key := m[1]
-			value := m[2]
+		s := strings.IndexAny(t, ":=")
+		if s < 0 {
+			s = strings.IndexByte(t, ' ')
+		}
+		if s > 0 {
+			key := strings.TrimSpace(t[:s])
+			value := strings.TrimSpace(t[s+1:])
+
+			i := len(value)
+			if i > 0 && value[0] == '"' && value[i-1] == '"' {
+				value = value[1 : i-1]
+			}
 
 			c.m[key] = value
 		}
