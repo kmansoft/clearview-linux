@@ -27,7 +27,6 @@ const (
 	DEFAULT_ADDR             = "127.0.0.1"
 	DEFAULT_VERBOSE          = false
 	DEFAULT_SLEEP            = 60
-	DEFAULT_HTTP_ROOT_DIR    = ""
 	DEFAULT_HTTP_CV_DIR      = "/var/lib/clearview-server/site/cv"
 	DEFAULT_CONFIG_FILE_NAME = "/etc/clearview-server.conf"
 )
@@ -42,7 +41,6 @@ func main() {
 
 	flag.IntVar(&flags.SleepInterval, "s", DEFAULT_SLEEP, "Sleep interval")
 
-	flag.StringVar(&flags.HttpWebRootDir, "rootdir", DEFAULT_HTTP_ROOT_DIR, "Directory for / pages")
 	flag.StringVar(&flags.HttpWebCvDir, "cvdir", DEFAULT_HTTP_CV_DIR, "Directory for /cv/web pages")
 
 	flag.StringVar(&flags.InfluxDbUri, "influx-db-uri", service.DATABASE_URI_INFLUX, "Influx database uri")
@@ -140,7 +138,6 @@ func main() {
 		authPassword: authPassword,
 		demoMode:     flags.DemoMode,
 		original:     serverObj.Handler,
-		webRootDir:   path.Clean(flags.HttpWebRootDir),
 		webCvDir:     path.Clean(flags.HttpWebCvDir),
 	}
 	serverObj.Handler = myHandler
@@ -156,7 +153,6 @@ func main() {
 
 type webHandler struct {
 	original     http.Handler
-	webRootDir   string
 	webCvDir     string
 	authUserName string
 	authPassword string
@@ -171,17 +167,15 @@ func (h webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Directory:", d)
 
 	if !h.demoMode {
-		if d != "/" {
-			requestUserName, requestPassword, ok := r.BasicAuth()
-			if !ok ||
-				subtle.ConstantTimeCompare([]byte(requestUserName), []byte(h.authUserName)) != 1 ||
-				subtle.ConstantTimeCompare([]byte(requestPassword), []byte(h.authPassword)) != 1 {
-				// Not authenticated
-				w.Header().Set("WWW-Authenticate", `Basic realm="ClearView"`)
-				w.WriteHeader(http.StatusUnauthorized)
-				time.Sleep(10 * time.Millisecond)
-				return
-			}
+		requestUserName, requestPassword, ok := r.BasicAuth()
+		if !ok ||
+			subtle.ConstantTimeCompare([]byte(requestUserName), []byte(h.authUserName)) != 1 ||
+			subtle.ConstantTimeCompare([]byte(requestPassword), []byte(h.authPassword)) != 1 {
+			// Not authenticated
+			w.Header().Set("WWW-Authenticate", `Basic realm="ClearView"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			time.Sleep(10 * time.Millisecond)
+			return
 		}
 	}
 
@@ -192,12 +186,6 @@ func (h webHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			p = p[3:] // remove "/cv" prefix
 
 			full := path.Join(h.webCvDir, p)
-			http.ServeFile(w, r, full)
-			return
-		} else if d == "/" && h.webRootDir != "" {
-			utils.StartHandlingHttpRequest(w, r)
-
-			full := path.Join(h.webRootDir, p)
 			http.ServeFile(w, r, full)
 			return
 		}

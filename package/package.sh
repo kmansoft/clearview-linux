@@ -135,13 +135,13 @@ do
 
                 cp "${PACKDIR}/${WHAT}/clearview-server.conf" "${TEMPDIR_DEB}/${WHAT}/etc/"
                 cp "${SRCDIR}/cv/web/"* "${TEMPDIR_DEB}/${WHAT}/var/lib/clearview-server/site/cv/web/"
-                cp "${PACKDIR}/${WHAT}/deb/conffiles" "${TEMPDIR_DEB}/${WHAT}/conffiles"
+                cp "${PACKDIR}/${WHAT}/deb/conffile" "${TEMPDIR_DEB}/${WHAT}/conffile"
            ;;
             agent)
                 DIR_LIST="./usr/sbin ./usr/lib/systemd/system ./etc"
 
                 cp "${PACKDIR}/${WHAT}/clearview.conf" "${TEMPDIR_DEB}/${WHAT}/etc/"
-                cp "${PACKDIR}/${WHAT}/deb/conffiles" "${TEMPDIR_DEB}/${WHAT}/conffiles"
+                cp "${PACKDIR}/${WHAT}/deb/conffile" "${TEMPDIR_DEB}/${WHAT}/conffile"
             ;;
             *) echo "Unknown software 'what' kind"
             exit 1

@@ -9,8 +9,7 @@ type Flags struct {
 	Verbose       bool
 	SleepInterval int
 
-	HttpWebRootDir string
-	HttpWebCvDir   string
+	HttpWebCvDir string
 
 	InfluxDbUri  string
 	InfluxDbName string
