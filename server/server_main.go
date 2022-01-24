@@ -55,19 +55,6 @@ func main() {
 
 	flag.Parse()
 
-	// We'll need an http server
-	addr := fmt.Sprintf("%s:%d", flags.ListenAddr, flags.ListenPort)
-	fmt.Printf("Starting the server on %s\n", addr)
-
-	router := httprouter.New()
-	router.HandleOPTIONS = false
-
-	serverObj := &http.Server{
-		Addr:    addr,
-		Handler: router,
-	}
-	serverLock := sync.Mutex{}
-
 	// Load config
 	config := common.ReadDefaultConfigFile(flags.ConfigFileName)
 	if err := config.GetError(); err != nil {
@@ -83,6 +70,23 @@ func main() {
 			common.CONFIG_AUTH_USERNAME, common.CONFIG_AUTH_PASSWORD, flags.ConfigFileName)
 		os.Exit(1)
 	}
+
+	// Override flags if specified in config file
+	flags.ListenAddr = config.GetOrDefault("listen_addr", flags.ListenAddr)
+	flags.ListenPort = config.GetInteger("listen_port", flags.ListenPort)
+
+	// We'll need an http server
+	addr := fmt.Sprintf("%s:%d", flags.ListenAddr, flags.ListenPort)
+	fmt.Printf("Starting the server on %s\n", addr)
+
+	router := httprouter.New()
+	router.HandleOPTIONS = false
+
+	serverObj := &http.Server{
+		Addr:    addr,
+		Handler: router,
+	}
+	serverLock := sync.Mutex{}
 
 	// Create api service
 	apiService := service.NewApiService(flags.DemoMode)

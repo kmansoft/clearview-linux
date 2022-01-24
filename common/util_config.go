@@ -2,6 +2,7 @@ package common
 
 import (
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -41,6 +42,17 @@ func (c *Config) GetBoolean(key string, def bool) bool {
 	if ok {
 		return strings.EqualFold(value, "true") ||
 			strings.EqualFold(value, "yes")
+	}
+	return def
+}
+
+func (c *Config) GetInteger(key string, def int) int {
+	value, ok := c.m[key]
+	if ok {
+		n, err := strconv.Atoi(value)
+		if err == nil {
+			return n
+		}
 	}
 	return def
 }
