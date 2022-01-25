@@ -23,7 +23,6 @@ import (
 
 const (
 	DEFAULT_SLEEP    = 60
-	DEFAULT_PORT     = 443
 	DEFAULT_INSECURE = false
 
 	CONTENT_TYPE          = "Content-Type"
@@ -62,10 +61,8 @@ func (f *Flags) makeServerUrl(confServerAddr string) url.URL {
 	}
 	u.Host = server
 
-	if u.Port() == "" {
-		if !f.insecure && f.port != 443 {
-			u.Host += ":" + strconv.Itoa(f.port)
-		}
+	if u.Port() == "" && f.port != 0 {
+		u.Host += ":" + strconv.Itoa(f.port)
 	}
 
 	return u
@@ -75,14 +72,12 @@ func main() {
 	flags := Flags{}
 
 	flag.StringVar(&flags.server, "s", "", "Server address")
-	flag.IntVar(&flags.port, "p", DEFAULT_PORT, "Server port")
+	flag.IntVar(&flags.port, "p", 0, "Server port")
 	flag.IntVar(&flags.sleep, "d", DEFAULT_SLEEP, "Duration of sleep between data points")
 	flag.BoolVar(&flags.insecure, "i", DEFAULT_INSECURE, "Do not use tls (https) for connecting to server")
 	flag.StringVar(&flags.configFileName, "f", DEFAULT_CONFIG_FILE, "The config file to use")
 	flag.Parse()
 
-	//nargs := flag.NArg()
-	//args := flag.Args()
 	fmt.Printf("Reading config from %s\n", flags.configFileName)
 
 	config := common.ReadDefaultConfigFile(flags.configFileName)
