@@ -118,6 +118,8 @@ func main() {
 				_ = server.Shutdown(ctx)
 
 				cancel()
+
+				os.Exit(0)
 			}
 
 		}
