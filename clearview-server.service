@@ -9,7 +9,6 @@ WorkingDirectory=/var/www/bin
 User=clearview
 Group=clearview
 ExecStart=/var/www/bin/clearview-server.out \
-    -rootdir /var/www/html/ \
     -cvdir /var/www/html/cv/ \
     -p 63001 \
     -influx-db-name clearview \
