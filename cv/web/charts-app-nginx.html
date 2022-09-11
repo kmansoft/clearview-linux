@@ -130,7 +130,7 @@
                 .catch((error) => {
                     console.log('get request error', error)
                 })
-                .then(() => {
+                .finally(() => {
                     console.log('get request is done')
                 })
         },
@@ -190,5 +190,3 @@
 
 
 </script>
-
-
