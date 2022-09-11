@@ -126,8 +126,14 @@
 </div>
 
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.1/tinycolor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+        integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.2/tinycolor.min.js"
+        integrity="sha512-+aXA9mgbUvFe0ToTlbt8/3vT7+nOgUmFw29wfFCsGoh8AZMRSU0p4WtOvC1vkF2JBrndPN2TuNZsHPAKPPxe8Q=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
 
 <link rel="stylesheet" href="time_chart.css"/>
 <script src="time_chart.js"></script>
@@ -163,7 +169,7 @@
                 return false
             }
 
-            const params = new URLSearchParams("?" + hash.substr(1));
+            const params = new URLSearchParams("?" + hash.substring(1));
             const slug = params.get("slug");
             const nodeId = params.get("node");
             if (!slug || !nodeId) {
@@ -511,4 +517,3 @@ window.__component__["${href}"].code = function() {
     }
 
 </script>
-
