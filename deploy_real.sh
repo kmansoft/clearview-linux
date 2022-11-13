@@ -25,7 +25,6 @@ if ! rsync -acvz \
     "kman@${SERVER}:/var/www/bin/"
 then
 	echo "*** Error syncing /var/www/bin/"
-	exit 1
 fi
 
 if ! rsync -acvz \
@@ -33,7 +32,6 @@ if ! rsync -acvz \
     "kman@${SERVER}:/var/www/html/"
 then
 	echo "*** Error syncing /var/www/html/"
-	exit 1
 fi
 
 if ! rsync -acvz \
@@ -41,7 +39,6 @@ if ! rsync -acvz \
     "kman@${SERVER}:/var/www/html/cv"
 then
 	echo "*** Error syncing /var/www/html/cv"
-	exit 1
 fi
 
 if ! rsync -acvz \
@@ -50,15 +47,16 @@ if ! rsync -acvz \
     "root@${SERVER}:/etc/systemd/system"
 then
 	echo "*** Error syncing /etc/systemd/system"
-	exit 1
 fi
 
-if ! rsync -acvz \
-    ./package/out/ \
-    "kman@${SERVER}:/var/www/download"
+if [ -d ./package/out ]
 then
-	echo "*** Error syncing /var/www/download"
-	exit 1
+	if ! rsync -acvz \
+	    ./package/out/ \
+	    "kman@${SERVER}:/var/www/download"
+	then
+		echo "*** Error syncing /var/www/download"
+	fi
 fi
 
 
