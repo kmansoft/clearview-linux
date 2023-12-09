@@ -421,6 +421,14 @@ func onApiV1SetNodeTitle(service *ApiService, model *ApiServerModel,
 	r *http.Request, ps httprouter.Params) (int, string) {
 	fmt.Printf("onApiV1SetNodeTitle\n")
 
+	if service.demoMode {
+		// Demo mode
+		rsDemo := RsApiV1Index{
+			DemoMode: true,
+		}
+		return utils.WriteJsonResponse(w, &rsDemo)
+	}
+
 	// Read the request
 	var rq RqApiV1SetNodeTitle
 	err := json.Unmarshal(requestData, &rq)
@@ -450,7 +458,10 @@ func onApiV1CreateNode(service *ApiService, model *ApiServerModel,
 		if err != nil {
 			return http.StatusInternalServerError, err.Error()
 		} else if count >= 1 {
-			return http.StatusOK, "{}"
+			rsDemo := RsApiV1Index{
+				DemoMode: true,
+			}
+			return utils.WriteJsonResponse(w, &rsDemo)
 		}
 	}
 
@@ -480,7 +491,10 @@ func onApiV1DeleteNode(service *ApiService, model *ApiServerModel,
 
 	if service.demoMode {
 		// Demo mode
-		return http.StatusOK, "{}"
+		rsDemo := RsApiV1Index{
+			DemoMode: true,
+		}
+		return utils.WriteJsonResponse(w, &rsDemo)
 	}
 
 	// Read the request
